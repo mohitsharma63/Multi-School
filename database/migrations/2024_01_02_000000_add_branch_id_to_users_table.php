@@ -9,65 +9,59 @@ class AddBranchIdToUsersTable extends Migration
 {
     public function up()
     {
-        // First ensure the schools table exists and has the correct structure
-        if (!Schema::hasTable('schools')) {
-            Schema::create('schools', function (Blueprint $table) {
-                $table->bigIncrements('id');
-                // Add other necessary columns for schools table
-                $table->timestamps();
-            });
+        // First ensure the branches table exists
+        if (!Schema::hasTable('branches')) {
+            Log::error('Branches table does not exist. Please create it first.');
+            throw new \RuntimeException('Branches table does not exist. Please create it first.');
         }
 
-        // Then modify the branches table
-        Schema::table('branches', function (Blueprint $table) {
+        // Add branch_id column to users table
+        Schema::table('users', function (Blueprint $table) {
             // Check if column already exists to avoid errors
-            if (!Schema::hasColumn('branches', 'school_id')) {
-                $table->unsignedBigInteger('school_id')->after('id')->nullable();
+            if (!Schema::hasColumn('users', 'branch_id')) {
+                $table->unsignedBigInteger('branch_id')->after('id')->nullable();
 
                 // Add index for better performance
-                $table->index('school_id');
+                $table->index('branch_id');
             }
         });
 
         // Add foreign key constraint in a separate operation
-        Schema::table('branches', function (Blueprint $table) {
-            // Verify the schools table and id column exist
-            if (Schema::hasTable('schools') && Schema::hasColumn('schools', 'id')) {
+        Schema::table('users', function (Blueprint $table) {
+            // Verify the branches table and id column exist
+            if (Schema::hasTable('branches') && Schema::hasColumn('branches', 'id')) {
                 // Check if foreign key doesn't already exist
                 $connection = Schema::getConnection();
-                $foreignKeys = $connection->getDoctrineSchemaManager()->listTableForeignKeys('branches');
+                $foreignKeys = $connection->getDoctrineSchemaManager()->listTableForeignKeys('users');
 
                 $foreignKeyExists = false;
                 foreach ($foreignKeys as $key) {
-                    if ($key->getForeignTableName() === 'schools' &&
-                        in_array('school_id', $key->getLocalColumns())) {
+                    if ($key->getForeignTableName() === 'branches' &&
+                        in_array('branch_id', $key->getLocalColumns())) {
                         $foreignKeyExists = true;
                         break;
                     }
                 }
 
                 if (!$foreignKeyExists) {
-                    $table->foreign('school_id')
+                    $table->foreign('branch_id')
                           ->references('id')
-                          ->on('schools')
-                          ->onDelete('cascade')
+                          ->on('branches')
+                          ->onDelete('set null')
                           ->onUpdate('cascade');
                 }
             }
         });
-
-        // For existing data, you might want to set a default school_id
-        // DB::table('branches')->whereNull('school_id')->update(['school_id' => 1]);
     }
 
     public function down()
     {
-        Schema::table('branches', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table) {
             // Drop foreign key first
-            $table->dropForeign(['school_id']);
+            $table->dropForeign(['branch_id']);
 
             // Then drop the column
-            $table->dropColumn('school_id');
+            $table->dropColumn('branch_id');
         });
     }
 }

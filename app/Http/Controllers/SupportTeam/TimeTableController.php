@@ -28,21 +28,32 @@ class TimeTableController extends Controller
     public function index()
     {
         $branch_id = request('branch_id');
+        $school_id = request('school_id');
 
         $d['my_classes'] = $this->my_class->all();
+        $d['exams'] = $this->exam->all();
 
+        // Filter timetable records by branch if selected
         if($branch_id) {
-            $d['time_tables'] = $this->tt->getByBranch($branch_id);
+            $d['tt_records'] = $this->tt->getRecordsByBranch($branch_id);
         } else {
-            $d['time_tables'] = $this->tt->getAll();
+            $d['tt_records'] = $this->tt->getAllRecords();
         }
 
-        // Get all branches for dropdown
-        $d['branches'] = \App\Models\Branch::where('is_active', true)->get();
+        // Get all schools for dropdown
+        $d['schools'] = \App\Models\School::where('is_active', true)->get();
 
-        // Get user's default branch or selected branch
-        $d['user_branch'] = $branch_id ?? (auth()->user()->branch_id ?? null);
+        // Get branches filtered by school if selected
+        if($school_id) {
+            $d['branches'] = \App\Models\Branch::where('school_id', $school_id)->where('is_active', true)->get();
+        } else {
+            $d['branches'] = \App\Models\Branch::where('is_active', true)->get();
+        }
+
+        // Set selected values for the view
         $d['selected_branch'] = $branch_id;
+        $d['selected_school'] = $school_id;
+        $d['user_branch'] = $branch_id ?? (auth()->user()->branch_id ?? null);
 
         return view('pages.support_team.timetables.index', $d);
     }

@@ -117,11 +117,25 @@ class TimeTableRepo
 
     public function getAll()
     {
-        return TimeTable::orderBy('name')->get();
+        return TimeTable::orderBy('id')->get();
     }
 
     public function getByBranch($branch_id)
     {
-        return TimeTable::where('branch_id', $branch_id)->orderBy('name')->get();
+        return TimeTable::join('time_table_records', 'time_tables.ttr_id', '=', 'time_table_records.id')
+                        ->join('my_classes', 'time_table_records.my_class_id', '=', 'my_classes.id')
+                        ->where('my_classes.branch_id', $branch_id)
+                        ->select('time_tables.*')
+                        ->orderBy('time_tables.id')->get();
+    }
+
+    public function getRecordsByBranch($branch_id)
+    {
+        return TimeTableRecord::join('my_classes', 'time_table_records.my_class_id', '=', 'my_classes.id')
+                             ->where('my_classes.branch_id', $branch_id)
+                             ->select('time_table_records.*')
+                             ->with(['my_class', 'exam'])
+                             ->orderBy('time_table_records.created_at')
+                             ->get();
     }
 }
