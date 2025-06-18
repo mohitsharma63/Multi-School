@@ -8,18 +8,20 @@ use App\Http\Requests\Section\SectionUpdate;
 use App\Repositories\MyClassRepo;
 use App\Http\Controllers\Controller;
 use App\Repositories\UserRepo;
+use App\Repositories\SchoolRepo;
 
 class SectionController extends Controller
 {
-    protected $my_class, $user;
+    protected $my_class, $user, $school;
 
-    public function __construct(MyClassRepo $my_class, UserRepo $user)
+    public function __construct(MyClassRepo $my_class, UserRepo $user, SchoolRepo $school)
     {
         $this->middleware('teamSA', ['except' => ['destroy',] ]);
         $this->middleware('super_admin', ['only' => ['destroy',] ]);
 
         $this->my_class = $my_class;
         $this->user = $user;
+        $this->school = $school;
     }
 
     public function index()
@@ -27,6 +29,7 @@ class SectionController extends Controller
         $d['my_classes'] = $this->my_class->all();
         $d['sections'] = $this->my_class->getAllSections();
         $d['teachers'] = $this->user->getUserByType('teacher');
+        $d['schools'] = SchoolRepo::getAll();
 
         return view('pages.support_team.sections.index', $d);
     }
@@ -63,6 +66,13 @@ class SectionController extends Controller
 
         $this->my_class->deleteSection($id);
         return back()->with('flash_success', __('msg.del_ok'));
+    }
+
+    public function getClassesBySchool()
+    {
+        $schoolId = request('school_id');
+        $classes = $this->my_class->getWhere(['school_id' => $schoolId]);
+        return response()->json(['classes' => $classes]);
     }
 
 }

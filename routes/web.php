@@ -1,6 +1,19 @@
-Route::post('ajax/get-classes-by-school', 'AjaxController@getClassesBySchool')->name('ajax.get-classes-by-school');
-
 <?php
+
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+Route::post('ajax/get-classes-by-school', 'AjaxController@getClassesBySchool')->name('ajax.get-classes-by-school');
 
 Auth::routes();
 
@@ -140,7 +153,11 @@ Route::group(['middleware' => 'auth'], function () {
         Route::resource('students', 'StudentRecordController');
         Route::resource('users', 'UserController');
         Route::resource('classes', 'MyClassController');
-        Route::resource('sections', 'SectionController');
+        Route::group(['middleware' => 'teamSA'], function () {
+            Route::resource('sections', 'SectionController');
+            Route::get('ajax/get-classes-by-school', 'SectionController@getClassesBySchool');
+            Route::get('ajax/get-classes-for-subjects', 'SubjectController@getClassesBySchool');
+        });
         Route::resource('subjects', 'SubjectController');
         Route::resource('grades', 'GradeController');
         Route::resource('exams', 'ExamController');

@@ -27,6 +27,7 @@ class SubjectController extends Controller
         $d['my_classes'] = $this->my_class->all();
         $d['teachers'] = $this->user->getUserByType('teacher');
         $d['subjects'] = $this->my_class->getAllSubjects();
+        $d['schools'] = app(\App\Repositories\SchoolRepo::class)->getAll();
 
         return view('pages.support_team.subjects.index', $d);
     }
@@ -61,4 +62,12 @@ class SubjectController extends Controller
         $this->my_class->deleteSubject($id);
         return back()->with('flash_success', __('msg.del_ok'));
     }
+
+    public function getClassesBySchool()
+    {
+        $schoolId = request('school_id');
+        $classes = $this->my_class->getWhere(['school_id' => $schoolId]);
+        return response()->json(['classes' => $classes]);
+    }
+
 }

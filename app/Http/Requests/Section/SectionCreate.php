@@ -21,15 +21,17 @@ class SectionCreate extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|string',
+            'name' => 'required|string|min:1|max:100',
             'my_class_id' => 'required',
-            'teacher_id' => 'sometimes|nullable|exists:users,id',
+            'teacher_id' => 'sometimes|nullable',
+            'school_id' => 'required|exists:schools,id',
         ];
     }
 
     public function attributes()
     {
         return  [
+            'school_id' => 'School',
             'my_class_id' => 'Class',
             'teacher_id' => 'Teacher',
         ];

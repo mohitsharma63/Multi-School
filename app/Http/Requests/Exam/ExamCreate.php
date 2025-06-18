@@ -16,8 +16,9 @@ class ExamCreate extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|string',
-            'term' => 'required|numeric',
+            'name' => 'required|string|min:3|max:50',
+            'term' => 'required|string',
+            'school_id' => 'required|exists:schools,id',
         ];
     }
 
