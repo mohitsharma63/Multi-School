@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SuperAdmin\SettingController;
 
 Auth::routes();
 
@@ -164,7 +165,8 @@ Route::group(['namespace' => 'SuperAdmin','middleware' => 'super_admin', 'prefix
 
     Route::resource('schools', SchoolController::class);
     Route::resource('branches', BranchController::class);
-    Route::resource('settings', SettingController::class, ['only' => ['index', 'update']]);
+    Route::get('settings', [\App\Http\Controllers\SuperAdmin\SettingController::class, 'index'])->name('settings.index');
+    Route::put('settings', [\App\Http\Controllers\SuperAdmin\SettingController::class, 'update'])->name('settings.update');
 });
 
 /************************ PARENT ****************************/

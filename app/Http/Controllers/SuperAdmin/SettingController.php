@@ -83,6 +83,41 @@ class SettingController extends Controller
         $sets = $req->except('_token', '_method', 'logo', 'school_id', 'branch_id');
         $sets['lock_exam'] = $sets['lock_exam'] == 1 ? 1 : 0;
 
+        // If no school is selected, create a new school
+        if(!$school_id && isset($sets['system_name']) && !empty($sets['system_name'])) {
+            $schoolData = [
+                'name' => $sets['system_name'],
+                'code' => strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $sets['system_name']), 0, 3) . rand(100, 999)),
+                'address' => $sets['address'],
+                'phone' => $sets['phone'] ?? null,
+                'email' => $sets['system_email'] ?? null,
+                'system_title' => $sets['system_title'] ?? null,
+                'current_session' => $sets['current_session'] ?? null,
+                'term_begins' => isset($sets['term_begins']) ? $this->convertDateFormat($sets['term_begins']) : null,
+                'term_ends' => isset($sets['term_ends']) ? $this->convertDateFormat($sets['term_ends']) : null,
+                'is_active' => true
+            ];
+
+            if($req->hasFile('logo')) {
+                $logo = $req->file('logo');
+                $f = Qs::getFileMetaData($logo);
+                $f['name'] = 'school_logo_' . time() . '.' . $f['ext'];
+                $f['path'] = $logo->storeAs(Qs::getPublicUploadPath(), $f['name']);
+                $schoolData['logo'] = asset('storage/' . $f['path']);
+            }
+
+            $newSchool = \App\Models\School::create($schoolData);
+
+            // Remove school-specific fields from settings update
+            unset($sets['system_name'], $sets['system_title'], $sets['address'], $sets['phone'], $sets['system_email'], $sets['current_session'], $sets['term_begins'], $sets['term_ends']);
+
+            // Update settings for the new school
+            $school_id = $newSchool->id;
+
+            return redirect()->route('settings.index', ['school_id' => $newSchool->id])
+                           ->with('flash_success', 'School created successfully! You can now configure additional settings.');
+        }
+
         // If school is selected, update school-specific information
         if($school_id) {
             $school = \App\Models\School::find($school_id);
@@ -94,8 +129,8 @@ class SettingController extends Controller
                     'phone' => $sets['phone'] ?? $school->phone,
                     'email' => $sets['system_email'] ?? $school->email,
                     'current_session' => $sets['current_session'] ?? $school->current_session,
-                    'term_begins' => $sets['term_begins'] ?? $school->term_begins,
-                    'term_ends' => $sets['term_ends'] ?? $school->term_ends,
+                    'term_begins' => isset($sets['term_begins']) ? $this->convertDateFormat($sets['term_begins']) : $school->term_begins,
+                    'term_ends' => isset($sets['term_ends']) ? $this->convertDateFormat($sets['term_ends']) : $school->term_ends,
                 ];
 
                 if($req->hasFile('logo')) {
@@ -132,5 +167,47 @@ class SettingController extends Controller
         }
 
         return back()->with('flash_success', __('msg.update_ok'));
+    }
+
+    /**
+     * Convert date from MM/DD/YYYY or DD/MM/YYYY format to YYYY-MM-DD format
+     */
+    private function convertDateFormat($date)
+    {
+        if (empty($date)) {
+            return null;
+        }
+
+        // If date is already in YYYY-MM-DD format, return as is
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return $date;
+        }
+
+        // Try to parse MM/DD/YYYY or DD/MM/YYYY format
+        try {
+            // Try MM/DD/YYYY format first
+            $dateObj = \DateTime::createFromFormat('m/d/Y', $date);
+            if ($dateObj !== false) {
+                return $dateObj->format('Y-m-d');
+            }
+
+            // Try DD/MM/YYYY format
+            $dateObj = \DateTime::createFromFormat('d/m/Y', $date);
+            if ($dateObj !== false) {
+                return $dateObj->format('Y-m-d');
+            }
+
+            // Try other common formats
+            $dateObj = \DateTime::createFromFormat('Y-m-d', $date);
+            if ($dateObj !== false) {
+                return $dateObj->format('Y-m-d');
+            }
+
+        } catch (\Exception $e) {
+            // If conversion fails, return null
+            return null;
+        }
+
+        return null;
     }
 }
