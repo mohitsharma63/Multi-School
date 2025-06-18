@@ -1,48 +1,45 @@
 <?php
 
-namespace App\Models;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
-use App\User;
-use App\Traits\BranchIsolation;
-use Eloquent;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-
-// Add branch relationship to StudentRecord model
-class StudentRecord extends Eloquent
+class CreateStudentRecordsTable extends Migration
 {
-    use HasFactory, BranchIsolation;
-
-    protected $fillable = [
-        'session', 'user_id', 'my_class_id', 'section_id', 'my_parent_id', 'dorm_id', 'dorm_room_no', 'adm_no', 'year_admitted', 'wd', 'wd_date', 'grad', 'grad_date', 'house', 'age'
-    ];
-
-    public function user()
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
     {
-        return $this->belongsTo(User::class);
+        Schema::create('student_records', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('user_id');
+            $table->unsignedInteger('my_class_id');
+            $table->unsignedInteger('section_id');
+            $table->string('adm_no', 30)->unique()->nullable();
+            $table->unsignedInteger('my_parent_id')->nullable();
+            $table->unsignedInteger('dorm_id')->nullable();
+            $table->string('dorm_room_no')->nullable();
+            $table->string('session');
+            $table->string('house')->nullable();
+            $table->tinyInteger('age')->nullable();
+            $table->string('year_admitted')->nullable();
+            $table->tinyInteger('grad')->default(0);
+            $table->string('grad_date')->nullable();
+
+            $table->timestamps();
+        });
     }
 
-    public function my_class()
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
     {
-        return $this->belongsTo(MyClass::class);
-    }
-
-    public function branch()
-    {
-        return $this->belongsTo(Branch::class);
-    }
-
-    public function section()
-    {
-        return $this->belongsTo(Section::class);
-    }
-
-    public function dorm()
-    {
-        return $this->belongsTo(Dorm::class);
-    }
-
-    public function my_parent()
-    {
-        return $this->belongsTo(User::class, 'my_parent_id');
+        Schema::dropIfExists('student_records');
     }
 }

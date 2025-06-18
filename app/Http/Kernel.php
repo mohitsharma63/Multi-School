@@ -55,7 +55,6 @@ class Kernel extends HttpKernel
     protected $routeMiddleware = [
         'auth' => \App\Http\Middleware\Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
-        'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
@@ -63,20 +62,12 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-
-        // Custom Middleware - Alphabetical order
         'admin' => \App\Http\Middleware\Custom\Admin::class,
-        'branch.admin' => \App\Http\Middleware\Custom\BranchAdmin::class,
-        'branch.isolation' => \App\Http\Middleware\BranchIsolation::class,
-        'api.branch.isolation' => \App\Http\Middleware\ApiBranchIsolation::class,
-        'exam.lock' => \App\Http\Middleware\Custom\ExamIsLocked::class,
-        'parent' => \App\Http\Middleware\Custom\MyParent::class,
-        'school.admin' => \App\Http\Middleware\Custom\SchoolAdmin::class,
-        'student' => \App\Http\Middleware\Custom\Student::class,
         'super_admin' => \App\Http\Middleware\Custom\SuperAdmin::class,
-        'teacher' => \App\Http\Middleware\Custom\Teacher::class,
-        'teamAccount' => \App\Http\Middleware\Custom\TeamAccount::class,
         'teamSA' => \App\Http\Middleware\Custom\TeamSA::class,
         'teamSAT' => \App\Http\Middleware\Custom\TeamSAT::class,
+        'teamAccount' => \App\Http\Middleware\Custom\TeamAccount::class,
+        'examIsLocked' => \App\Http\Middleware\Custom\ExamIsLocked::class,
+        'my_parent' => \App\Http\Middleware\Custom\MyParent::class,
     ];
 }

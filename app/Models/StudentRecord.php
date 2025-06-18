@@ -3,14 +3,12 @@
 namespace App\Models;
 
 use App\User;
-use App\Traits\BranchIsolation;
 use Eloquent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-// Add branch relationship to StudentRecord model
 class StudentRecord extends Eloquent
 {
-    use HasFactory, BranchIsolation;
+    use HasFactory;
 
     protected $fillable = [
         'session', 'user_id', 'my_class_id', 'section_id', 'my_parent_id', 'dorm_id', 'dorm_room_no', 'adm_no', 'year_admitted', 'wd', 'wd_date', 'grad', 'grad_date', 'house', 'age'
@@ -21,14 +19,14 @@ class StudentRecord extends Eloquent
         return $this->belongsTo(User::class);
     }
 
+    public function my_parent()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function my_class()
     {
         return $this->belongsTo(MyClass::class);
-    }
-
-    public function branch()
-    {
-        return $this->belongsTo(Branch::class);
     }
 
     public function section()
@@ -39,10 +37,5 @@ class StudentRecord extends Eloquent
     public function dorm()
     {
         return $this->belongsTo(Dorm::class);
-    }
-
-    public function my_parent()
-    {
-        return $this->belongsTo(User::class, 'my_parent_id');
     }
 }

@@ -7,7 +7,7 @@ use Eloquent;
 
 class Subject extends Eloquent
 {
-    protected $fillable = ['name', 'my_class_id', 'teacher_id', 'slug', 'branch_id'];
+    protected $fillable = ['name', 'my_class_id', 'teacher_id', 'slug'];
 
     public function my_class()
     {
@@ -17,15 +17,5 @@ class Subject extends Eloquent
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id');
-    }
-
-    public function branch()
-    {
-        return $this->belongsTo(Branch::class);
-    }
-
-    public function scopeByBranch($query, $branchId)
-    {
-        return $query->where('branch_id', $branchId);
     }
 }

@@ -1,47 +1,34 @@
-
 <?php
 
 namespace App\Models;
 
-use Eloquent;
+use Illuminate\Database\Eloquent\Model;
 
-class Branch extends Eloquent
+class Branch extends Model
 {
     protected $fillable = [
-        'school_id', 'name', 'code', 'location', 'phone', 'email', 'status'
+        'name',
+        'code',
+        'address',
+        'phone',
+        'email',
+        'head_name',
+        'head_phone',
+        'head_email',
+        'is_active'
     ];
 
     protected $casts = [
-        'status' => 'boolean'
+        'is_active' => 'boolean'
     ];
 
-    public function school()
+    public function students()
     {
-        return $this->belongsTo(School::class);
+        return $this->hasMany(StudentRecord::class);
     }
 
     public function users()
     {
         return $this->hasMany(User::class);
-    }
-
-    public function students()
-    {
-        return $this->hasMany(User::class)->where('user_type', 'student');
-    }
-
-    public function teachers()
-    {
-        return $this->hasMany(User::class)->where('user_type', 'teacher');
-    }
-
-    public function parents()
-    {
-        return $this->hasMany(User::class)->where('user_type', 'parent');
-    }
-
-    public function scopeActive($query)
-    {
-        return $query->where('status', 1);
     }
 }

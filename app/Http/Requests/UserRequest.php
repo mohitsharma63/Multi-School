@@ -20,24 +20,33 @@ class UserRequest extends FormRequest
      */
     public function rules()
     {
-        $rules = [
+        $store =  [
             'name' => 'required|string|min:6|max:150',
+            'password' => 'nullable|string|min:3|max:50',
+            'user_type' => 'required',
             'gender' => 'required|string',
             'phone' => 'sometimes|nullable|string|min:6|max:20',
             'email' => 'sometimes|nullable|email|max:100|unique:users',
+            'username' => 'sometimes|nullable|alpha_dash|min:8|max:100|unique:users',
             'photo' => 'sometimes|nullable|image|mimes:jpeg,gif,png,jpg|max:2048',
             'address' => 'required|string|min:6|max:120',
-            'user_type' => 'required|string',
+            'state_id' => 'required',
+            'lga_id' => 'required',
+            'nal_id' => 'required',
         ];
-
-        // Add school/branch validation for Super Admin
-        if(auth()->user() && auth()->user()->isSuperAdmin()) {
-            $rules['school_id'] = 'required|exists:schools,id';
-            $rules['branch_id'] = 'required|exists:branches,id';
-            $rules['role_id'] = 'required|exists:roles,id';
-        }
-
-        return $rules;
+        $update =  [
+            'name' => 'required|string|min:6|max:150',
+            'gender' => 'required|string',
+            'phone' => 'sometimes|nullable|string|min:6|max:20',
+            'phone2' => 'sometimes|nullable|string|min:6|max:20',
+            'email' => 'sometimes|nullable|email|max:100|unique:users,email,'.$this->user,
+            'photo' => 'sometimes|nullable|image|mimes:jpeg,gif,png,jpg|max:2048',
+            'address' => 'required|string|min:6|max:120',
+            'state_id' => 'required',
+            'lga_id' => 'required',
+            'nal_id' => 'required',
+        ];
+        return ($this->method() === 'POST') ? $store : $update;
     }
 
     public function attributes()

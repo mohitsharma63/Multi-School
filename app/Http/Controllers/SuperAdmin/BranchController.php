@@ -4,52 +4,56 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
-use App\Models\School;
-use Illuminate\Http\Request;
 use App\Http\Requests\Branch\BranchCreate;
 use App\Http\Requests\Branch\BranchUpdate;
+use App\Helpers\Qs;
 
 class BranchController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
-
-        if($user->isSuperAdmin()) {
-            $d['branches'] = Branch::with('school')->orderBy('name')->get();
-        } elseif($user->isSchoolAdmin()) {
-            $d['branches'] = Branch::with('school')->where('school_id', $user->school_id)->get();
-        } else {
-            $d['branches'] = Branch::with('school')->where('id', $user->branch_id)->get();
-        }
-
-        $d['schools'] = School::active()->orderBy('name')->get();
-        return view('pages.super_admin.branches.index', $d);
+        $branches = Branch::orderBy('name')->get();
+        return view('pages.super_admin.branches.index', compact('branches'));
     }
 
-    public function store(BranchCreate $req)
+    public function create()
     {
-        Branch::create($req->validated());
-        return back()->with('flash_success', 'Branch Created Successfully');
+        return view('pages.super_admin.branches.create');
     }
 
-    public function edit($id)
+    public function store(BranchCreate $request)
     {
-        $d['branch'] = Branch::findOrFail($id);
-        $d['schools'] = School::active()->orderBy('name')->get();
-        return view('pages.super_admin.branches.edit', $d);
+        $data = $request->validated();
+        $data['code'] = strtoupper($data['code']);
+
+        Branch::create($data);
+
+        return redirect()->route('branches.index')->with('flash_success', __('msg.store_ok'));
     }
 
-    public function update(BranchUpdate $req, $id)
+    public function show(Branch $branch)
     {
-        $branch = Branch::findOrFail($id);
-        $branch->update($req->validated());
-        return back()->with('flash_success', 'Branch Updated Successfully');
+        return view('pages.super_admin.branches.show', compact('branch'));
     }
 
-    public function destroy($id)
+    public function edit(Branch $branch)
     {
-        Branch::destroy($id);
-        return back()->with('flash_success', 'Branch Deleted Successfully');
+        return view('pages.super_admin.branches.edit', compact('branch'));
+    }
+
+    public function update(BranchUpdate $request, Branch $branch)
+    {
+        $data = $request->validated();
+        $data['code'] = strtoupper($data['code']);
+
+        $branch->update($data);
+
+        return back()->with('flash_success', __('msg.update_ok'));
+    }
+
+    public function destroy(Branch $branch)
+    {
+        $branch->delete();
+        return back()->with('flash_success', __('msg.del_ok'));
     }
 }

@@ -79,7 +79,6 @@ class StudentRecordController extends Controller
         $sr['adm_no'] = $data['username'];
         $sr['user_id'] = $user->id;
         $sr['session'] = Qs::getSetting('current_session');
-        $sr['branch_id'] = auth()->user()->getCurrentBranchId();
 
         $this->student->createRecord($sr); // Create Student
         return Qs::jsonStoreOk();
@@ -87,20 +86,9 @@ class StudentRecordController extends Controller
 
     public function listByClass($class_id)
     {
-        $user = auth()->user();
-        $currentBranch = $user->getCurrentBranchId();
-        
         $data['my_class'] = $mc = $this->my_class->getMC(['id' => $class_id])->first();
-        
-        // Filter students by branch if not super admin
-        if ($currentBranch && !$user->isSuperAdmin()) {
-            $data['students'] = $this->student->findStudentsByClassAndBranch($class_id, $currentBranch);
-        } else {
-            $data['students'] = $this->student->findStudentsByClass($class_id);
-        }
-        
+        $data['students'] = $this->student->findStudentsByClass($class_id);
         $data['sections'] = $this->my_class->getClassSections($class_id);
-        $data['current_branch'] = $currentBranch;
 
         return is_null($mc) ? Qs::goWithDanger() : view('pages.support_team.students.list', $data);
     }

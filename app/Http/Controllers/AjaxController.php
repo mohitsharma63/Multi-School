@@ -6,7 +6,6 @@ use App\Helpers\Qs;
 use App\Repositories\LocationRepo;
 use App\Repositories\MyClassRepo;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Branch;
 
 class AjaxController extends Controller
 {
@@ -56,11 +55,4 @@ class AjaxController extends Controller
         return $d;
     }
 
-    public function get_branches(Request $req)
-    {
-        $school_id = $req->school_id;
-        $branches = Branch::where('school_id', $school_id)->where('status', 1)->orderBy('name')->get();
-
-        return $branches->toJson();
-    }
 }

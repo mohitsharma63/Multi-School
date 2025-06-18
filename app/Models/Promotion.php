@@ -7,7 +7,7 @@ use Eloquent;
 
 class Promotion extends Eloquent
 {
-    protected $fillable = ['from_class', 'from_section', 'to_class', 'to_section', 'grad', 'student_id', 'from_session', 'to_session', 'status', 'branch_id'];
+    protected $fillable = ['from_class', 'from_section', 'to_class', 'to_section', 'grad', 'student_id', 'from_session', 'to_session', 'status'];
 
     public function student()
     {
@@ -32,15 +32,5 @@ class Promotion extends Eloquent
     public function tc()
     {
         return $this->belongsTo(MyClass::class, 'to_class');
-    }
-
-    public function branch()
-    {
-        return $this->belongsTo(Branch::class);
-    }
-
-    public function scopeByBranch($query, $branchId)
-    {
-        return $query->where('branch_id', $branchId);
     }
 }

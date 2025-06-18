@@ -4,15 +4,13 @@ namespace App\Http\Controllers\SupportTeam;
 
 use App\Helpers\Qs;
 use App\Http\Requests\UserRequest;
-use App\Http\Requests\UserUpdate;
 use App\Repositories\LocationRepo;
 use App\Repositories\MyClassRepo;
 use App\Repositories\UserRepo;
 use App\Http\Controllers\Controller;
-use App\Models\School;
-use App\Models\Branch;
-use App\Models\Role;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 
@@ -68,55 +66,44 @@ class UserController extends Controller
 
     public function store(UserRequest $req)
     {
-        $user_type = $req->user_type;
-        $data =  $req->only(Qs::getUserRecord());
-        $data['user_type'] = $user_type;
-        $data['name'] = ucwords($req->name);
-        $data['code'] = strtoupper(Str::random(10));
-        $data['password'] = Hash::make('user');
-        $data['photo'] = Qs::getDefaultUserImage();
+        $user_type = $this->user->findType($req->user_type)->title;
 
-        // Handle school and branch assignment for Super Admin
-        if(auth()->user()->isSuperAdmin()) {
-            $data['school_id'] = $req->school_id;
-            $data['branch_id'] = $req->branch_id;
-            $data['role_id'] = $req->role_id;
-        } else {
-            // For non-super admin, inherit current user's school and branch
-            $data['school_id'] = auth()->user()->school_id;
-            $data['branch_id'] = auth()->user()->branch_id;
+        $data = $req->except(Qs::getStaffRecord());
+        $data['name'] = ucwords($req->name);
+        $data['user_type'] = $user_type;
+        $data['photo'] = Qs::getDefaultUserImage();
+        $data['code'] = strtoupper(Str::random(10));
+
+        $user_is_staff = in_array($user_type, Qs::getStaff());
+        $user_is_teamSA = in_array($user_type, Qs::getTeamSA());
+
+        $staff_id = Qs::getAppCode().'/STAFF/'.date('Y/m', strtotime($req->emp_date)).'/'.mt_rand(1000, 9999);
+        $data['username'] = $uname = ($user_is_teamSA) ? $req->username : $staff_id;
+
+        $pass = $req->password ?: $user_type;
+        $data['password'] = Hash::make($pass);
+
+        if($req->hasFile('photo')) {
+            $photo = $req->file('photo');
+            $f = Qs::getFileMetaData($photo);
+            $f['name'] = 'photo.' . $f['ext'];
+            $f['path'] = $photo->storeAs(Qs::getUploadPath($user_type).$data['code'], $f['name']);
+            $data['photo'] = asset('storage/' . $f['path']);
         }
 
-        $user_is_teamSAT = in_array($user_type, Qs::getTeamSAT());
-        $user_is_student = ($user_type == 'student');
-        $user_is_parent = ($user_type == 'parent');
+        /* Ensure that both username and Email are not blank*/
+        if(!$uname && !$req->email){
+            return back()->with('pop_error', __('msg.user_invalid'));
+        }
 
         $user = $this->user->create($data); // Create User
 
         /* CREATE STAFF RECORD */
-        if($user_is_teamSAT){
+        if($user_is_staff){
             $d2 = $req->only(Qs::getStaffRecord());
             $d2['user_id'] = $user->id;
-            $d2['code'] = $data['code'];
-            $d2['branch_id'] = $data['branch_id']; // Add branch_id to staff record
+            $d2['code'] = $staff_id;
             $this->user->createStaffRecord($d2);
-        }
-
-        /* CREATE STUDENT RECORD*/
-        if($user_is_student){
-            $d3 = $req->only(Qs::getStudentData());
-            $d3['user_id'] = $user->id;
-            $d3['adm_no'] = $req->adm_no;
-            $d3['session'] = Qs::getSetting('current_session');
-            $d3['branch_id'] = $data['branch_id']; // Add branch_id to student record
-            $sr = $this->user->createStudentRecord($d3); // Create Student
-
-            /* Insert Into My Classes*/
-            $mc['student_id'] = $sr->user_id;
-            $mc['my_class_id'] = $sr->my_class_id;
-            $mc['section_id'] = $sr->section_id;
-            $mc['session'] = $sr->session;
-            $this->my_class->createRecord($mc);
         }
 
         return Qs::jsonStoreOk();
@@ -209,30 +196,6 @@ class UserController extends Controller
     {
         $subjects = $this->my_class->findSubjectByTeacher($user->id);
         return ($subjects->count() > 0) ? true : false;
-    }
-
-    public function create()
-    {
-        $data['my_classes'] = $this->my_class->all();
-        $data['parents'] = $this->user->getUserByType('parent');
-        $data['dorms'] = $this->user->getAllDorms();
-        $data['states'] = $this->loc->getStates();
-        $data['lgas'] = $this->loc->getLgas();
-        $data['nationals'] = $this->loc->getAllNationals();
-        $data['blood_groups'] = $this->user->getBloodGroups();
-
-        // Add schools and branches for Super Admin
-        if(auth()->user()->isSuperAdmin()) {
-            $data['schools'] = School::active()->orderBy('name')->get();
-            $data['branches'] = Branch::with('school')->orderBy('name')->get();
-        } else {
-            $data['schools'] = collect();
-            $data['branches'] = collect();
-        }
-
-        $data['roles'] = Role::active()->orderBy('level')->get();
-
-        return view('pages.support_team.users.create', $data);
     }
 
 }

@@ -16,16 +16,3 @@ use Illuminate\Http\Request;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
-
-// API routes with branch isolation
-Route::middleware(['auth:api', 'api.branch.isolation'])->group(function () {
-    Route::apiResource('students', 'Api\StudentController');
-    Route::apiResource('payments', 'Api\PaymentController');
-    Route::apiResource('classes', 'Api\ClassController');
-    Route::apiResource('subjects', 'Api\SubjectController');
-    Route::apiResource('exams', 'Api\ExamController');
-    
-    // Branch and school info for Super Admin
-    Route::get('schools', 'Api\SchoolController@index');
-    Route::get('branches', 'Api\BranchController@index');
-});

@@ -6,7 +6,7 @@ use Eloquent;
 
 class MyClass extends Eloquent
 {
-    protected $fillable = ['name', 'class_type_id', 'branch_id'];
+    protected $fillable = ['name', 'class_type_id'];
 
     public function section()
     {
@@ -21,15 +21,5 @@ class MyClass extends Eloquent
     public function student_record()
     {
         return $this->hasMany(StudentRecord::class);
-    }
-
-    public function branch()
-    {
-        return $this->belongsTo(Branch::class);
-    }
-
-    public function scopeByBranch($query, $branchId)
-    {
-        return $query->where('branch_id', $branchId);
     }
 }

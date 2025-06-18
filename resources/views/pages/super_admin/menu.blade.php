@@ -3,6 +3,11 @@
     <a href="{{ route('settings') }}" class="nav-link {{ in_array(Route::currentRouteName(), ['settings',]) ? 'active' : '' }}"><i class="icon-gear"></i> <span>Settings</span></a>
 </li>
 
+{{--Manage Branches--}}
+<li class="nav-item">
+    <a href="{{ route('branches.index') }}" class="nav-link {{ in_array(Route::currentRouteName(), ['branches.index', 'branches.create', 'branches.edit', 'branches.show']) ? 'active' : '' }}"><i class="icon-office"></i> <span>Branches</span></a>
+</li>
+
 {{--Pins--}}
 <li class="nav-item nav-item-submenu {{ in_array(Route::currentRouteName(), ['pins.create', 'pins.index']) ? 'nav-item-expanded nav-item-open' : '' }} ">
     <a href="#" class="nav-link"><i class="icon-lock2"></i> <span> Pins</span></a>
