@@ -4,18 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Branch extends Model
+class School extends Model
 {
     protected $fillable = [
-        'school_id',
         'name',
         'code',
         'address',
         'phone',
         'email',
-        'head_name',
-        'head_phone',
-        'head_email',
+        'system_title',
+        'current_session',
+        'term_begins',
+        'term_ends',
+        'logo',
         'is_active'
     ];
 
@@ -23,13 +24,13 @@ class Branch extends Model
         'is_active' => 'boolean',
     ];
 
-    public function school()
+    public function branches()
     {
-        return $this->belongsTo(School::class);
+        return $this->hasMany(Branch::class);
     }
 
     public function users()
     {
-        return $this->hasMany(User::class);
+        return $this->hasManyThrough(User::class, Branch::class);
     }
 }

@@ -1,5 +1,7 @@
 <?php
-
+    use App\Http\Controllers\SuperAdmin\BranchController;
+use App\Http\Controllers\SuperAdmin\SchoolController;
+use App\Http\Controllers\SuperAdmin\SettingController;
 Auth::routes();
 
 //Route::get('/test', 'TestController@index')->name('test');
@@ -159,11 +161,10 @@ Route::group(['middleware' => 'auth'], function () {
 /************************ SUPER ADMIN ****************************/
 Route::group(['namespace' => 'SuperAdmin','middleware' => 'super_admin', 'prefix' => 'super_admin'], function(){
 
-    Route::get('/settings', 'SettingController@index')->name('settings');
-    Route::put('/settings', 'SettingController@update')->name('settings.update');
 
-    // Branch Management Routes
-    Route::resource('branches', 'BranchController');
+    Route::resource('schools', SchoolController::class);
+    Route::resource('branches', BranchController::class);
+    Route::resource('settings', SettingController::class, ['only' => ['index', 'update']]);
 });
 
 /************************ PARENT ****************************/

@@ -48,7 +48,12 @@ class UserRepo {
 
     public function getAll()
     {
-        return User::orderBy('name', 'asc')->get();
+        return User::orderBy('name')->get();
+    }
+
+    public function getByBranch($branch_id)
+    {
+        return User::where('branch_id', $branch_id)->orderBy('name')->get();
     }
 
     public function getPTAUsers()

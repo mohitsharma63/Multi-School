@@ -12,13 +12,15 @@ class BranchController extends Controller
 {
     public function index()
     {
-        $branches = Branch::orderBy('name')->get();
-        return view('pages.super_admin.branches.index', compact('branches'));
+        $branches = Branch::with('school')->orderBy('name')->get();
+        $schools = \App\Models\School::where('is_active', true)->get();
+        return view('pages.super_admin.branches.index', compact('branches', 'schools'));
     }
 
     public function create()
     {
-        return view('pages.super_admin.branches.create');
+        $schools = \App\Models\School::where('is_active', true)->get();
+        return view('pages.super_admin.branches.create', compact('schools'));
     }
 
     public function store(BranchCreate $request)
@@ -38,7 +40,8 @@ class BranchController extends Controller
 
     public function edit(Branch $branch)
     {
-        return view('pages.super_admin.branches.edit', compact('branch'));
+        $schools = \App\Models\School::where('is_active', true)->get();
+        return view('pages.super_admin.branches.edit', compact('branch', 'schools'));
     }
 
     public function update(BranchUpdate $request, Branch $branch)

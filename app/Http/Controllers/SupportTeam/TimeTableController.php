@@ -27,9 +27,22 @@ class TimeTableController extends Controller
 
     public function index()
     {
-        $d['exams'] = $this->exam->getExam(['year' => $this->year]);
+        $branch_id = request('branch_id');
+
         $d['my_classes'] = $this->my_class->all();
-        $d['tt_records'] = $this->tt->getAllRecords();
+
+        if($branch_id) {
+            $d['time_tables'] = $this->tt->getByBranch($branch_id);
+        } else {
+            $d['time_tables'] = $this->tt->getAll();
+        }
+
+        // Get all branches for dropdown
+        $d['branches'] = \App\Models\Branch::where('is_active', true)->get();
+
+        // Get user's default branch or selected branch
+        $d['user_branch'] = $branch_id ?? (auth()->user()->branch_id ?? null);
+        $d['selected_branch'] = $branch_id;
 
         return view('pages.support_team.timetables.index', $d);
     }

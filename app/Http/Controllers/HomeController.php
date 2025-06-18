@@ -38,9 +38,26 @@ class HomeController extends Controller
     public function dashboard()
     {
         $d=[];
+        $branch_id = request('branch_id');
+
+        // Get user's default branch if no branch_id is provided
+        $user_default_branch = auth()->user()->branch_id ?? null;
+        $selected_branch_id = $branch_id ?? $user_default_branch;
+
         if(Qs::userIsTeamSAT()){
-            $d['users'] = $this->user->getAll();
+            if($selected_branch_id) {
+                $d['users'] = $this->user->getByBranch($selected_branch_id);
+            } else {
+                $d['users'] = $this->user->getAll();
+            }
         }
+
+        // Get all branches for dropdown
+        $d['branches'] = \App\Models\Branch::where('is_active', true)->get();
+
+        // Set the selected branch (either from URL parameter or user's default branch)
+        $d['user_branch'] = $selected_branch_id;
+        $d['selected_branch'] = $selected_branch_id;
 
         return view('pages.support_team.dashboard', $d);
     }

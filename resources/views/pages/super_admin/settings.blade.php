@@ -4,13 +4,29 @@
 
     <div class="card">
         <div class="card-header header-elements-inline">
-            <h6 class="card-title font-weight-semibold">Update System Settungs </h6>
+            <h6 class="card-title">School & Branch Filter</h6>
+            {!! Qs::getPanelOptions() !!}
+        </div>
+        <div class="card-body">
+            @include('partials.school_branch_selector')
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header header-elements-inline">
+            <h6 class="card-title font-weight-semibold">Update System Settings</h6>
             {!! Qs::getPanelOptions() !!}
         </div>
 
         <div class="card-body">
-            <form enctype="multipart/form-data" method="post" action="{{ route('settings.update') }}">
+            <form enctype="multipart/form-data" method="post" action="{{ route('settings.update') }}{{ request('school_id') ? '?school_id='.request('school_id') : '' }}{{ request('branch_id') ? '&branch_id='.request('branch_id') : '' }}">
                 @csrf @method('PUT')
+                @if(request('school_id'))
+                    <input type="hidden" name="school_id" value="{{ request('school_id') }}">
+                @endif
+                @if(request('branch_id'))
+                    <input type="hidden" name="branch_id" value="{{ request('branch_id') }}">
+                @endif
             <div class="row">
                 <div class="col-md-6 border-right-2 border-right-blue-400">
                         <div class="form-group row">

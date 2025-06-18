@@ -114,4 +114,14 @@ class TimeTableRepo
     {
         return TimeTableRecord::findOrFail($id);
     }
+
+    public function getAll()
+    {
+        return TimeTable::orderBy('name')->get();
+    }
+
+    public function getByBranch($branch_id)
+    {
+        return TimeTable::where('branch_id', $branch_id)->orderBy('name')->get();
+    }
 }
