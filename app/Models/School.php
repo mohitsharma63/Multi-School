@@ -2,35 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Eloquent;
 
-class School extends Model
+class School extends Eloquent
 {
     protected $fillable = [
-        'name',
-        'code',
-        'address',
-        'phone',
-        'email',
-        'system_title',
-        'current_session',
-        'term_begins',
-        'term_ends',
-        'logo',
-        'is_active'
+        'name', 'acronym', 'email', 'phone', 'address', 'logo',
+        'current_session', 'term_ends', 'term_begins', 'lock_exam', 'is_active'
     ];
 
     protected $casts = [
+        'lock_exam' => 'boolean',
         'is_active' => 'boolean',
+        'term_ends' => 'date',
+        'term_begins' => 'date',
     ];
-
-    public function branches()
-    {
-        return $this->hasMany(Branch::class);
-    }
-
-    public function users()
-    {
-        return $this->hasManyThrough(User::class, Branch::class);
-    }
 }

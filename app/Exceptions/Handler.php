@@ -3,8 +3,6 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Illuminate\Support\Facades\DB;
-use Throwable;
 
 class Handler extends ExceptionHandler
 {
@@ -35,23 +33,5 @@ class Handler extends ExceptionHandler
     public function register()
     {
         //
-    }
-
-    /**
-     * Report or log an exception.
-     *
-     * @param  \Throwable  $exception
-     * @return void
-     *
-     * @throws \Exception
-     */
-    public function report(Throwable $exception)
-    {
-        // Safely rollback any active transactions on exceptions
-        if (DB::transactionLevel() > 0) {
-            DB::rollback();
-        }
-
-        parent::report($exception);
     }
 }

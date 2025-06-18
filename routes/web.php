@@ -1,8 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\SuperAdmin\SettingController;
-
 Auth::routes();
 
 //Route::get('/test', 'TestController@index')->name('test');
@@ -155,6 +152,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('get_lga/{state_id}', 'AjaxController@get_lga')->name('get_lga');
         Route::get('get_class_sections/{class_id}', 'AjaxController@get_class_sections')->name('get_class_sections');
         Route::get('get_class_subjects/{class_id}', 'AjaxController@get_class_subjects')->name('get_class_subjects');
+        Route::get('get-classes-by-school', 'AjaxController@getClassesBySchool')->name('get_classes_by_school');
     });
 
 });
@@ -162,11 +160,10 @@ Route::group(['middleware' => 'auth'], function () {
 /************************ SUPER ADMIN ****************************/
 Route::group(['namespace' => 'SuperAdmin','middleware' => 'super_admin', 'prefix' => 'super_admin'], function(){
 
+    Route::get('/settings', 'SettingController@index')->name('settings');
+    Route::put('/settings', 'SettingController@update')->name('settings.update');
+    Route::resource('schools', 'SchoolController');
 
-    Route::resource('schools', SchoolController::class);
-    Route::resource('branches', BranchController::class);
-    Route::get('settings', [\App\Http\Controllers\SuperAdmin\SettingController::class, 'index'])->name('settings.index');
-    Route::put('settings', [\App\Http\Controllers\SuperAdmin\SettingController::class, 'update'])->name('settings.update');
 });
 
 /************************ PARENT ****************************/

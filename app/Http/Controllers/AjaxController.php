@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Qs;
+use App\Models\Mark;
+use App\Models\MyClass;
 use App\Repositories\LocationRepo;
 use App\Repositories\MyClassRepo;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AjaxController extends Controller
@@ -17,15 +20,22 @@ class AjaxController extends Controller
         $this->my_class = $my_class;
     }
 
-    public function get_lga($state_id)
+    public function get_lga(Request $req)
     {
-//        $state_id = Qs::decodeHash($state_id);
-//        return ['id' => Qs::hash($q->id), 'name' => $q->name];
+        $s = $req->state_id;
+        $lgas = $this->loc->getLGAs($s);
+        return response()->json(['lgas' => $lgas]);
+    }
 
-        $lgas = $this->loc->getLGAs($state_id);
-        return $data = $lgas->map(function($q){
-            return ['id' => $q->id, 'name' => $q->name];
-        })->all();
+    public function getClassesBySchool(Request $req)
+    {
+        $schoolId = $req->school_id;
+        if (!$schoolId) {
+            return response()->json(['classes' => []]);
+        }
+
+        $classes = MyClass::where('school_id', $schoolId)->orderBy('name')->get();
+        return response()->json(['classes' => $classes]);
     }
 
     public function get_class_sections($class_id)

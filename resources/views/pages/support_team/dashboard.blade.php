@@ -2,16 +2,6 @@
 @section('page_title', 'My Dashboard')
 @section('content')
 
-    <div class="card">
-        <div class="card-header header-elements-inline">
-            <h6 class="card-title">Branch Filter</h6>
-            {!! Qs::getPanelOptions() !!}
-        </div>
-        <div class="card-body">
-            @include('partials.branch_selector')
-        </div>
-    </div>
-
     @if(Qs::userIsTeamSA())
        <div class="row">
            <div class="col-sm-6 col-xl-3">

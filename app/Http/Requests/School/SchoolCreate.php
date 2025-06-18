@@ -15,15 +15,16 @@ class SchoolCreate extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:10|unique:schools,code',
-            'address' => 'required|string',
-            'phone' => 'nullable|string|max:20',
+            'acronym' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
-            'system_title' => 'nullable|string|max:255',
-            'current_session' => 'nullable|string|max:20',
-            'term_begins' => 'nullable|date',
-            'term_ends' => 'nullable|date',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'required|string',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'current_session' => 'nullable|string',
+            'term_ends' => 'nullable|date',
+            'term_begins' => 'nullable|date',
+            'lock_exam' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean',
         ];
     }
 }

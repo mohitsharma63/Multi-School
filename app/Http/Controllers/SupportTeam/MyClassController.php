@@ -7,25 +7,28 @@ use App\Http\Requests\MyClass\ClassCreate;
 use App\Http\Requests\MyClass\ClassUpdate;
 use App\Repositories\MyClassRepo;
 use App\Repositories\UserRepo;
+use App\Repositories\SchoolRepo;
 use App\Http\Controllers\Controller;
 
 class MyClassController extends Controller
 {
-    protected $my_class, $user;
+    protected $my_class, $user, $school;
 
-    public function __construct(MyClassRepo $my_class, UserRepo $user)
+    public function __construct(MyClassRepo $my_class, UserRepo $user, SchoolRepo $school)
     {
         $this->middleware('teamSA', ['except' => ['destroy',] ]);
         $this->middleware('super_admin', ['only' => ['destroy',] ]);
 
         $this->my_class = $my_class;
         $this->user = $user;
+        $this->school = $school;
     }
 
     public function index()
     {
         $d['my_classes'] = $this->my_class->all();
         $d['class_types'] = $this->my_class->getTypes();
+        $d['schools'] = $this->school->getAll();
 
         return view('pages.support_team.classes.index', $d);
     }

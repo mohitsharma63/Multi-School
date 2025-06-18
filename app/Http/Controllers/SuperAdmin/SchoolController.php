@@ -2,75 +2,73 @@
 
 namespace App\Http\Controllers\SuperAdmin;
 
+use App\Helpers\Qs;
 use App\Http\Controllers\Controller;
-use App\Models\School;
 use App\Http\Requests\School\SchoolCreate;
 use App\Http\Requests\School\SchoolUpdate;
-use App\Helpers\Qs;
+use App\Repositories\SchoolRepo;
 
 class SchoolController extends Controller
 {
+    protected $school;
+
+    public function __construct(SchoolRepo $school)
+    {
+        $this->middleware('super_admin');
+        $this->school = $school;
+    }
+
     public function index()
     {
-        $schools = School::with('branches')->orderBy('name')->get();
-        return view('pages.super_admin.schools.index', compact('schools'));
+        $d['schools'] = $this->school->getAll();
+        return view('pages.super_admin.schools.index', $d);
     }
 
-    public function create()
+    public function store(SchoolCreate $req)
     {
-        return view('pages.super_admin.schools.create');
-    }
+        $data = $req->except('logo');
+        $data['lock_exam'] = $req->lock_exam ? 1 : 0;
+        $data['is_active'] = $req->is_active ? 1 : 0;
 
-    public function store(SchoolCreate $request)
-    {
-        $data = $request->validated();
-        $data['code'] = strtoupper($data['code']);
-
-        if($request->hasFile('logo')) {
-            $logo = $request->file('logo');
+        if($req->hasFile('logo')) {
+            $logo = $req->file('logo');
             $f = Qs::getFileMetaData($logo);
-            $f['name'] = 'school_logo_' . time() . '.' . $f['ext'];
+            $f['name'] = 'logo_' . time() . '.' . $f['ext'];
             $f['path'] = $logo->storeAs(Qs::getPublicUploadPath(), $f['name']);
             $data['logo'] = asset('storage/' . $f['path']);
         }
 
-        School::create($data);
-
-        return redirect()->route('schools.index')->with('flash_success', __('msg.store_ok'));
+        $this->school->create($data);
+        return Qs::jsonStoreOk();
     }
 
-    public function show(School $school)
+    public function edit($id)
     {
-        $school->load('branches');
-        return view('pages.super_admin.schools.show', compact('school'));
+        $d['school'] = $school = $this->school->find($id);
+        return is_null($school) ? Qs::goWithDanger('schools.index') : view('pages.super_admin.schools.edit', $d);
     }
 
-    public function edit(School $school)
+    public function update(SchoolUpdate $req, $id)
     {
-        return view('pages.super_admin.schools.edit', compact('school'));
-    }
+        $data = $req->except('logo');
+        $data['lock_exam'] = $req->lock_exam ? 1 : 0;
+        $data['is_active'] = $req->is_active ? 1 : 0;
 
-    public function update(SchoolUpdate $request, School $school)
-    {
-        $data = $request->validated();
-        $data['code'] = strtoupper($data['code']);
-
-        if($request->hasFile('logo')) {
-            $logo = $request->file('logo');
+        if($req->hasFile('logo')) {
+            $logo = $req->file('logo');
             $f = Qs::getFileMetaData($logo);
-            $f['name'] = 'school_logo_' . time() . '.' . $f['ext'];
+            $f['name'] = 'logo_' . time() . '.' . $f['ext'];
             $f['path'] = $logo->storeAs(Qs::getPublicUploadPath(), $f['name']);
             $data['logo'] = asset('storage/' . $f['path']);
         }
 
-        $school->update($data);
-
-        return back()->with('flash_success', __('msg.update_ok'));
+        $this->school->update($id, $data);
+        return Qs::jsonUpdateOk();
     }
 
-    public function destroy(School $school)
+    public function destroy($id)
     {
-        $school->delete();
-        return back()->with('flash_success', __('msg.del_ok'));
+        $this->school->delete($id);
+        return back()->with('flash_success', __('msg.delete_ok'));
     }
 }
