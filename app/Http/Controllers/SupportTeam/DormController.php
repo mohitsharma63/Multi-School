@@ -23,12 +23,19 @@ class DormController extends Controller
     public function index()
     {
         $d['dorms'] = $this->dorm->getAll();
+        $d['schools'] = \App\Repositories\SchoolRepo::getAll();
         return view('pages.support_team.dorms.index', $d);
     }
 
     public function store(DormCreate $req)
     {
-        $data = $req->only(['name', 'description']);
+        $data = $req->only(['name', 'description', 'school_id']);
+
+        // If user is not super admin, use their school_id
+        if (!Qs::userIsSuperAdmin() && auth()->user()->school_id) {
+            $data['school_id'] = auth()->user()->school_id;
+        }
+
         $this->dorm->create($data);
 
         return Qs::jsonStoreOk();

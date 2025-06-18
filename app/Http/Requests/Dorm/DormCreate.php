@@ -16,7 +16,9 @@ class DormCreate extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|string|unique:dorms',
+            'name' => 'required|string|max:100|unique:dorms',
+            'school_id' => 'nullable|exists:schools,id',
+            'description' => 'nullable|string|max:255',
         ];
     }
 
