@@ -1,7 +1,7 @@
 <?php
-    use App\Http\Controllers\SuperAdmin\BranchController;
-use App\Http\Controllers\SuperAdmin\SchoolController;
-use App\Http\Controllers\SuperAdmin\SettingController;
+
+use Illuminate\Support\Facades\Route;
+
 Auth::routes();
 
 //Route::get('/test', 'TestController@index')->name('test');
