@@ -1,3 +1,5 @@
+Route::post('ajax/get-classes-by-school', 'AjaxController@getClassesBySchool')->name('ajax.get-classes-by-school');
+
 <?php
 
 Auth::routes();

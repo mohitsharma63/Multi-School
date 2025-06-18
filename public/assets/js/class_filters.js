@@ -1,114 +1,118 @@
 
-$(document).ready(function() {
-    // Initialize DataTables with export functionality
-    if ($('.classes-table table').length > 0) {
-        $('.classes-table table').each(function() {
-            if (!$.fn.DataTable.isDataTable(this)) {
-                $(this).DataTable({
-                    dom: 'Bfrtip',
-                    buttons: [
-                        'copy', 'csv', 'excel', 'pdf', 'print'
-                    ],
-                    pageLength: 25,
-                    order: [[1, 'asc']], // Order by class name
-                    columnDefs: [
-                        { orderable: false, targets: [6] } // Disable ordering on actions column
-                    ]
-                });
-            }
+// Advanced Class Filters
+var ClassFilters = {
+    init: function() {
+        this.bindEvents();
+        this.initializeSelects();
+    },
+
+    bindEvents: function() {
+        var self = this;
+
+        // Apply filters button
+        $('#apply-filters').on('click', function(e) {
+            e.preventDefault();
+            self.applyFilters();
         });
-    }
-});
 
-function applyFilters() {
-    const schoolId = $('#school-filter').val();
-    const classTypeId = $('#class-type-filter').val();
-    const searchTerm = $('#search-filter').val().toLowerCase();
+        // Reset filters button
+        $('#reset-filters').on('click', function(e) {
+            e.preventDefault();
+            self.resetFilters();
+        });
 
-    $('.class-row').each(function() {
-        let showRow = true;
+        // Auto-apply filters on change
+        $('#school-filter, #class-type-filter').on('change', function() {
+            self.applyFilters();
+        });
+    },
 
-        // School filter
-        if (schoolId && $(this).data('school-id') != schoolId) {
-            showRow = false;
+    initializeSelects: function() {
+        if ($.fn.select2) {
+            $('.select').select2({
+                minimumResultsForSearch: Infinity,
+                placeholder: function() {
+                    return $(this).data('placeholder');
+                }
+            });
         }
+    },
 
-        // Class type filter
-        if (classTypeId && $(this).data('class-type-id') != classTypeId) {
-            showRow = false;
-        }
+    applyFilters: function() {
+        var schoolFilter = $('#school-filter').val();
+        var classTypeFilter = $('#class-type-filter').val();
+        var visibleCount = 0;
 
-        // Search filter
-        if (searchTerm && !$(this).data('class-name').includes(searchTerm)) {
-            showRow = false;
-        }
-
-        if (showRow) {
-            $(this).show();
+        // Check if DataTable exists and is initialized
+        if (typeof classesTable !== 'undefined' && classesTable && $.fn.DataTable.isDataTable('#classes-table')) {
+            // Use DataTable's built-in filtering
+            classesTable.draw();
         } else {
-            $(this).hide();
+            // Fallback to manual row filtering
+            $('.class-row').each(function() {
+                var $row = $(this);
+                var schoolId = $row.data('school-id');
+                var classTypeId = $row.data('class-type-id');
+                var showRow = true;
+
+                // Apply school filter
+                if (schoolFilter && schoolId != schoolFilter) {
+                    showRow = false;
+                }
+
+                // Apply class type filter
+                if (classTypeFilter && classTypeId != classTypeFilter) {
+                    showRow = false;
+                }
+
+                // Show/hide row
+                if (showRow) {
+                    $row.show();
+                    visibleCount++;
+                } else {
+                    $row.hide();
+                }
+            });
         }
-    });
 
-    updateStats();
-    showNotification('Filters applied successfully!', 'success');
-}
+        this.showNotification('Filters applied successfully.', 'success');
+    },
 
-function resetFilters() {
-    $('#school-filter').val('').trigger('change');
-    $('#class-type-filter').val('').trigger('change');
-    $('#search-filter').val('');
+    resetFilters: function() {
+        // Reset select values
+        $('#school-filter').val('').trigger('change');
+        $('#class-type-filter').val('').trigger('change');
 
-    $('.class-row').show();
-    updateStats();
-    showNotification('Filters reset successfully!', 'info');
-}
-
-function updateStats() {
-    const visibleRows = $('.class-row:visible').length;
-    const totalRows = $('.class-row').length;
-
-    // Update the stats if needed
-    console.log(`Showing ${visibleRows} of ${totalRows} classes`);
-}
-
-function reinitializeDataTables() {
-    $('.classes-table table').each(function() {
-        if ($.fn.DataTable.isDataTable(this)) {
-            $(this).DataTable().destroy();
+        // Clear DataTable filters if exists
+        if (typeof classesTable !== 'undefined' && classesTable && $.fn.DataTable.isDataTable('#classes-table')) {
+            classesTable.search('').draw();
         }
-        $(this).DataTable({
-            dom: 'Bfrtip',
-            buttons: [
-                'copy', 'csv', 'excel', 'pdf', 'print'
-            ],
-            pageLength: 25,
-            order: [[1, 'asc']], // Order by class name
-            columnDefs: [
-                { orderable: false, targets: [6] } // Disable ordering on actions column
-            ]
-        });
-    });
-}
 
-function showNotification(message, type) {
-    // Use your existing notification system
-    if (typeof flash_msg !== 'undefined') {
-        flash_msg(message, type);
-    } else {
-        // Fallback notification
-        alert(message);
+        // Show all rows
+        $('.class-row').show();
+
+        this.showNotification('All filters cleared.', 'info');
+    },
+
+    showNotification: function(message, type) {
+        if (typeof flash_msg !== 'undefined') {
+            flash_msg(message, type);
+        } else if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Filter Status',
+                text: message,
+                type: type,
+                delay: 3000
+            });
+        } else {
+            console.log(type.toUpperCase() + ': ' + message);
+        }
     }
-}
+};
 
-// Real-time search
-$('#search-filter').on('keyup', function() {
-    if ($(this).val().length > 2 || $(this).val().length === 0) {
-        applyFilters();
+// Initialize when document is ready
+$(document).ready(function() {
+    if ($('#school-filter').length > 0) {
+        ClassFilters.init();
     }
-});
-
-// Auto-apply filters when dropdowns change
-$('#school-filter, #class-type-filter').on('change', function() {
-    applyFilters();
 });

@@ -172,10 +172,36 @@
 @endsection
 
 @section('scripts')
+<script src="{{ asset('assets/js/class_filters.js') }}"></script>
 <script>
+var classesTable;
+
 $(document).ready(function() {
-    // Initialize advanced filters
-    initializeClassFilters();
+    // Check if DataTable is already initialized
+    if ($.fn.DataTable.isDataTable('#classes-table')) {
+        classesTable = $('#classes-table').DataTable();
+    } else if ($('#classes-table').length > 0) {
+        // Initialize DataTables with export functionality
+        classesTable = $('#classes-table').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'pdf', 'print'
+            ],
+            pageLength: 25,
+            order: [[1, 'asc']], // Order by name
+            columnDefs: [
+                { orderable: false, targets: [4] } // Disable ordering on actions column
+            ],
+            destroy: true // Allow reinitialization if needed
+        });
+    }
+
+    // Initialize select2 for all select elements
+    if ($.fn.select2) {
+        $('.select').select2({
+            minimumResultsForSearch: Infinity
+        });
+    }
 
     // Apply filters
     $('#apply-filters').on('click', function() {
@@ -187,58 +213,67 @@ $(document).ready(function() {
         resetClassFilters();
     });
 
-    // Initialize DataTables with export functionality
-    if ($('#classes-table').length > 0) {
-        if (!$.fn.DataTable.isDataTable('#classes-table')) {
-            $('#classes-table').DataTable({
-                dom: 'Bfrtip',
-                buttons: [
-                    'copy', 'csv', 'excel', 'pdf', 'print'
-                ],
-                pageLength: 25,
-                order: [[1, 'asc']], // Order by name
-                columnDefs: [
-                    { orderable: false, targets: [4] } // Disable ordering on actions column
-                ]
-            });
-        }
-    }
+    // Auto-filter when dropdown changes
+    $('#school-filter, #class-type-filter').on('change', function() {
+        applyClassFilters();
+    });
 });
-
-function initializeClassFilters() {
-    // Initialize select2 if available
-    if ($.fn.select2) {
-        $('.select').select2({
-            minimumResultsForSearch: Infinity
-        });
-    }
-}
 
 function applyClassFilters() {
     var schoolFilter = $('#school-filter').val();
     var classTypeFilter = $('#class-type-filter').val();
 
-    // Show/hide class rows based on filters
-    $('.class-row').each(function() {
-        var row = $(this);
-        var showRow = true;
+    if (classesTable && $.fn.DataTable.isDataTable('#classes-table')) {
+        // Clear existing search
+        classesTable.search('').draw();
 
-        // School filter
-        if (schoolFilter && row.data('school-id') != schoolFilter) {
-            showRow = false;
-        }
+        // Apply custom filtering
+        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+            if (settings.nTable.id !== 'classes-table') {
+                return true;
+            }
 
-        // Class type filter
-        if (classTypeFilter && row.data('class-type-id') != classTypeFilter) {
-            showRow = false;
-        }
+            var $row = $(classesTable.row(dataIndex).node());
+            var rowSchoolId = $row.data('school-id');
+            var rowClassTypeId = $row.data('class-type-id');
 
-        if (showRow) {
-            row.show();
-        } else {
-            row.hide();
-        }
-    });
+            // School filter
+            if (schoolFilter && rowSchoolId != schoolFilter) {
+                return false;
+            }
+
+            // Class type filter
+            if (classTypeFilter && rowClassTypeId != classTypeFilter) {
+                return false;
+            }
+
+            return true;
+        });
+
+        classesTable.draw();
+    } else {
+        // Fallback for non-DataTable implementation
+        $('.class-row').each(function() {
+            var row = $(this);
+            var showRow = true;
+
+            // School filter
+            if (schoolFilter && row.data('school-id') != schoolFilter) {
+                showRow = false;
+            }
+
+            // Class type filter
+            if (classTypeFilter && row.data('class-type-id') != classTypeFilter) {
+                showRow = false;
+            }
+
+            if (showRow) {
+                row.show();
+            } else {
+                row.hide();
+            }
+        });
+    }
 
     showNotification('Filters applied successfully!', 'success');
 }
@@ -246,6 +281,13 @@ function applyClassFilters() {
 function resetClassFilters() {
     $('#school-filter').val('').trigger('change');
     $('#class-type-filter').val('').trigger('change');
+
+    // Clear custom search filters
+    $.fn.dataTable.ext.search.pop();
+
+    if (classesTable && $.fn.DataTable.isDataTable('#classes-table')) {
+        classesTable.search('').draw();
+    }
 
     // Show all rows
     $('.class-row').show();
@@ -257,8 +299,14 @@ function showNotification(message, type) {
     // Use your existing notification system
     if (typeof flash_msg !== 'undefined') {
         flash_msg(message, type);
+    } else if (typeof PNotify !== 'undefined') {
+        new PNotify({
+            title: 'Filter Status',
+            text: message,
+            type: type
+        });
     } else {
-        alert(message);
+        console.log(type.toUpperCase() + ': ' + message);
     }
 }
 </script>

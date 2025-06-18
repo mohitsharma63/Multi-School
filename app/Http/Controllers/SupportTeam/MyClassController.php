@@ -35,11 +35,18 @@ class MyClassController extends Controller
 
     public function store(ClassCreate $req)
     {
-        $data = $req->all();
+        $data = $req->only(['name', 'class_type_id', 'school_id']);
+
+        // Ensure school_id is provided
+        if (empty($data['school_id'])) {
+            return Qs::json('School selection is required', false);
+        }
+
         $mc = $this->my_class->create($data);
 
         // Create Default Section
-        $s =['my_class_id' => $mc->id,
+        $s = [
+            'my_class_id' => $mc->id,
             'name' => 'A',
             'active' => 1,
             'teacher_id' => NULL,
