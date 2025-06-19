@@ -17,8 +17,8 @@ class StudentRecordsTableSeeder extends Seeder
      */
     public function run()
     {
-        $this->createStudentRecord();
-        $this->createManyStudentRecords(3);
+        // $this->createStudentRecord();
+        // $this->createManyStudentRecords(3);
     }
 
     protected function createManyStudentRecords(int $count)

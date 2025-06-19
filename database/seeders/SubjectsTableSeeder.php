@@ -16,9 +16,9 @@ class SubjectsTableSeeder extends Seeder
      */
     public function run()
     {
-        DB::table('subjects')->delete();
+        // DB::table('subjects')->delete();
 
-        $this->createSubjects();
+        // $this->createSubjects();
     }
 
     protected function createSubjects()
