@@ -1,57 +1,64 @@
 <?php
+
 namespace Database\Seeders;
 
-use App\Models\State;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\State;
 
 class StatesTableSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
     public function run()
     {
-        DB::table('states')->delete();
-
         $states = [
-            'Andhra Pradesh',
-            'Arunachal Pradesh',
-            'Assam',
-            'Bihar',
-            'Chhattisgarh',
-            'Goa',
-            'Gujarat',
-            'Haryana',
-            'Himachal Pradesh',
-            'Jharkhand',
-            'Karnataka',
-            'Kerala',
-            'Madhya Pradesh',
-            'Maharashtra',
-            'Manipur',
-            'Meghalaya',
-            'Mizoram',
-            'Nagaland',
-            'Odisha',
-            'Punjab',
-            'Rajasthan',
-            'Sikkim',
-            'Tamil Nadu',
-            'Telangana',
-            'Tripura',
-            'Uttar Pradesh',
-            'Uttarakhand',
-            'West Bengal',
-            'Andaman and Nicobar Islands',
-            'Chandigarh',
-            'Dadra and Nagar Haveli and Daman and Diu',
-            'Delhi',
-            'Jammu and Kashmir',
-            'Ladakh',
-            'Lakshadweep',
-            'Puducherry'
+            // Indian States
+            ['name' => 'Andhra Pradesh'],
+            ['name' => 'Arunachal Pradesh'],
+            ['name' => 'Assam'],
+            ['name' => 'Bihar'],
+            ['name' => 'Chhattisgarh'],
+            ['name' => 'Goa'],
+            ['name' => 'Gujarat'],
+            ['name' => 'Haryana'],
+            ['name' => 'Himachal Pradesh'],
+            ['name' => 'Jharkhand'],
+            ['name' => 'Karnataka'],
+            ['name' => 'Kerala'],
+            ['name' => 'Madhya Pradesh'],
+            ['name' => 'Maharashtra'],
+            ['name' => 'Manipur'],
+            ['name' => 'Meghalaya'],
+            ['name' => 'Mizoram'],
+            ['name' => 'Nagaland'],
+            ['name' => 'Odisha'],
+            ['name' => 'Punjab'],
+            ['name' => 'Rajasthan'],
+            ['name' => 'Sikkim'],
+            ['name' => 'Tamil Nadu'],
+            ['name' => 'Telangana'],
+            ['name' => 'Tripura'],
+            ['name' => 'Uttar Pradesh'],
+            ['name' => 'Uttarakhand'],
+            ['name' => 'West Bengal'],
+
+            // Union Territories
+            ['name' => 'Andaman and Nicobar Islands'],
+            ['name' => 'Chandigarh'],
+            ['name' => 'Dadra and Nagar Haveli and Daman and Diu'],
+            ['name' => 'Delhi'],
+            ['name' => 'Jammu and Kashmir'],
+            ['name' => 'Ladakh'],
+            ['name' => 'Lakshadweep'],
+            ['name' => 'Puducherry'],
         ];
 
         foreach ($states as $state) {
-            State::create(['name' => $state]);
+            State::create($state);
         }
     }
 }

@@ -1,23 +1,38 @@
 <script>
 
     function getLGA(state_id){
-        var url = '{{ route('get_lga', [':id']) }}';
-        url = url.replace(':id', state_id);
+        var url = '/get_lgas/' + state_id;
         var lga = $('#lga_id');
 
+        console.log('getLGA called for state:', state_id);
+
         $.ajax({
+            type: 'GET',
             dataType: 'json',
             url: url,
+            beforeSend: function() {
+                lga.empty().append('<option value="">Loading...</option>');
+            },
             success: function (resp) {
-                //console.log(resp);
-                lga.empty();
-                $.each(resp, function (i, data) {
-                    lga.append($('<option>', {
-                        value: data.id,
-                        text: data.name
-                    }));
-                });
+                console.log('getLGA response:', resp);
+                lga.empty().append('<option value="">Select LGA...</option>');
 
+                if (resp && resp.length > 0) {
+                    $.each(resp, function (i, data) {
+                        lga.append($('<option>', {
+                            value: data.id,
+                            text: data.name
+                        }));
+                    });
+                } else {
+                    lga.append('<option value="">No LGAs found for this state</option>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('getLGA error:', error);
+                console.log('Status:', status);
+                console.log('Response:', xhr.responseText);
+                lga.empty().append('<option value="">Error loading LGAs</option>');
             }
         })
     }

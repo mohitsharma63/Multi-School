@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Lga;
 use App\Helpers\Qs;
 use App\Models\Mark;
 use App\Models\MyClass;
@@ -20,14 +21,14 @@ class AjaxController extends Controller
         $this->my_class = $my_class;
     }
 
-    public function get_lga(Request $req)
+    public function get_lga(Request $req, $state_id = null)
     {
-        $s = $req->state_id;
+        $s = $state_id ?: $req->state_id;
         if(!$s) {
-            return response()->json(['lgas' => []]);
+            return response()->json([]);
         }
         $lgas = $this->loc->getLGAs($s);
-        return response()->json(['lgas' => $lgas]);
+        return response()->json($lgas);
     }
 
     public function getClassesBySchool(Request $req)
@@ -77,4 +78,6 @@ class AjaxController extends Controller
 
         return $d;
     }
+
+
 }

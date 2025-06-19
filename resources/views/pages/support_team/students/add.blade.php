@@ -79,7 +79,7 @@
         <div class="card-header header-elements-inline">
             <h6 class="card-title">Please fill The form To Admit A New Student</h6>
             {!! Qs::getPanelOptions() !!}
-        </div></div>
+        </div>
 
             <form id="ajax-reg" method="post" enctype="multipart/form-data" class="wizard-form steps-validation" action="{{ route('students.store') }}" data-fouc>
                @csrf
@@ -97,20 +97,30 @@
                        </select>
                    </div>
                @else
-                   <!-- Hidden field for single school or non-super admin -->
-                   <input type="hidden" name="school_id" value="{{ Qs::getSetting('current_school_id') ?? 1 }}">
+
                @endif
                 <h6>Personal data</h6>
                 <fieldset>
                     <div class="row">
-                        <div class="col-md-6">
+                          <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="school_id">School: <span class="text-danger">*</span></label>
+                                        <select required data-placeholder="Select School" class="form-control select" name="school_id" id="school_id">
+                                            <option value="">Select School</option>
+                                            @foreach($schools as $school)
+                                                <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label>Full Name: <span class="text-danger">*</span></label>
                                 <input value="{{ old('name') }}" required type="text" name="name" placeholder="Full Name" class="form-control">
                                 </div>
                             </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label>Address: <span class="text-danger">*</span></label>
                                 <input value="{{ old('address') }}" class="form-control" placeholder="Address" name="address" type="text" required>
@@ -312,86 +322,9 @@
 
             </form>
         </div>
-
+</div>
 @endsection
 
 @section('scripts')
-<script>
-    $(document).ready(function() {
-        // Initialize select2 for better dropdowns
-        $('.select').select2({
-            minimumResultsForSearch: Infinity
-        });
-
-        // Auto-populate class sections
-        $('#my_class_id, #filter_class').on('change', function() {
-            var classId = $(this).val();
-            var targetSection = $(this).attr('id') === 'filter_class' ? '#filter_section' : '#section_id';
-            getClassSections(classId, targetSection);
-        });
-    });
-
-    function getLGA(state_id) {
-        var lgaSelect = $('#lga_id');
-        lgaSelect.html('<option value="">Loading...</option>');
-
-        if(state_id) {
-            $.ajax({
-                url: "{{ route('get_lga') }}",
-                type: "GET",
-                data: {state_id: state_id},
-                dataType: "json",
-                success: function(data) {
-                    lgaSelect.html('<option value="">Select LGA</option>');
-                    $.each(data.lgas, function(key, value) {
-                        lgaSelect.append('<option value="' + value.id + '">' + value.name + '</option>');
-                    });
-                },
-                error: function(xhr, status, error) {
-                    console.log('Error loading LGAs:', error);
-                    lgaSelect.html('<option value="">Error loading LGAs</option>');
-                }
-            });
-        } else {
-            lgaSelect.html('<option value="">Select State First</option>');
-        }
-    }
-
-    function getClassSections(class_id, target = '#section_id') {
-        var sectionSelect = $(target);
-        sectionSelect.html('<option value="">Loading...</option>');
-
-        if(class_id) {
-            $.ajax({
-                url: "{{ route('get_class_sections') }}",
-                type: "GET",
-                data: {class_id: class_id},
-                dataType: "json",
-                success: function(data) {
-                    sectionSelect.html('<option value="">Select Section</option>');
-                    $.each(data, function(key, value) {
-                        sectionSelect.append('<option value="' + value.id + '">' + value.name + '</option>');
-                    });
-                },
-                error: function(xhr, status, error) {
-                    console.log('Error loading sections:', error);
-                    sectionSelect.html('<option value="">Error loading sections</option>');
-                }
-            });
-        } else {
-            sectionSelect.html('<option value="">Select Class First</option>');
-        }
-    }
-
-    function applyStudentFilters() {
-        // Implement your filter logic here
-        console.log('Filters applied');
-    }
-
-    function clearStudentFilters() {
-        // Implement your clear filter logic here
-        $('#filter_school, #filter_class, #filter_gender, #filter_year').val('').trigger('change');
-        console.log('Filters cleared');
-    }
-</script>
+<script src="{{ asset('assets/js/state_lga_filter.js') }}"></script>
 @endsection

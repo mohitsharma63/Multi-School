@@ -20,6 +20,8 @@ Route::get('/privacy-policy', 'HomeController@privacy_policy')->name('privacy_po
 Route::get('/terms-of-use', 'HomeController@terms_of_use')->name('terms_of_use');
 
 Route::group(['middleware' => 'auth'], function () {
+    // AJAX Routes
+    Route::get('get_lgas/{state_id}', 'AjaxController@get_lga');
 
     // Main routes
     Route::get('/', 'HomeController@dashboard')->name('home');
@@ -159,11 +161,14 @@ Route::group(['middleware' => 'auth'], function () {
     /************************ AJAX Routes ****************************/
     Route::group(['prefix' => 'ajax', 'namespace' => 'App\Http\Controllers'], function() {
         // Changed from URL parameters to query parameters
-        Route::get('get_lga', 'AjaxController@get_lga')->name('get_lga');
+        Route::post('get_lga', 'AjaxController@get_lga')->name('get_lga');
         Route::get('get_class_sections', 'AjaxController@get_class_sections')->name('get_class_sections');
         Route::get('get_class_subjects', 'AjaxController@get_class_subjects')->name('get_class_subjects');
         Route::get('get-classes-by-school', 'AjaxController@getClassesBySchool')->name('get_classes_by_school');
     });
+
+    // Add the route that your JavaScript is expecting outside the ajax prefix
+    Route::get('get_lgas/{state_id}', 'AjaxController@get_lga');
 });
 
 /************************ SUPER ADMIN ****************************/

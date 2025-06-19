@@ -6,8 +6,8 @@ use Eloquent;
 
 class State extends Eloquent
 {
-    public function ministry()
+    public function lgas()
     {
-       // return $this->hasMany(Ministry::class);
+        return $this->hasMany(Lga::class);
     }
 }
