@@ -19,12 +19,12 @@
                         <label>Filter by School:</label>
                         <select class="form-control select" id="filter_school">
                             <option value="">All Schools</option>
-                            @if(Qs::userIsSuperAdmin() && isset($schools))
+                            @if(Qs::userIsSuperAdmin() && isset($schools) && $schools->count() > 0)
                             @foreach($schools as $school)
                                 <option value="{{ $school->id }}">{{ $school->name ?? 'Unknown School' }}</option>
                             @endforeach
                         @else
-                            <option value="{{ Qs::getSetting('current_school_id') }}" selected>{{ Qs::getSetting('system_name') }}</option>
+                            <option value="{{ Qs::getSetting('current_school_id') ?? 1 }}" selected>{{ Qs::getSetting('system_name') ?? 'Default School' }}</option>
                         @endif
                         </select>
                     </div>
@@ -34,9 +34,11 @@
                         <label>Filter by Class:</label>
                         <select class="form-control select" id="filter_class">
                             <option value="">All Classes</option>
-                            @foreach($my_classes as $c)
-                                <option value="{{ $c->id }}">{{ $c->name }}</option>
-                            @endforeach
+                            @if(isset($my_classes) && $my_classes->count() > 0)
+                                @foreach($my_classes as $c)
+                                    <option value="{{ $c->id }}">{{ $c->name ?? 'Unknown Class' }}</option>
+                                @endforeach
+                            @endif
                         </select>
                     </div>
                 </div>
@@ -81,8 +83,23 @@
 
             <form id="ajax-reg" method="post" enctype="multipart/form-data" class="wizard-form steps-validation" action="{{ route('students.store') }}" data-fouc>
                @csrf
-               <!-- Hidden field for school ID -->
-               <input type="hidden" name="school_id" value="{{ Qs::getSetting('current_school_id') ?? 1 }}">
+               <!-- School selection field -->
+               @if(Qs::userIsSuperAdmin() && isset($schools) && $schools->count() > 1)
+                   <div class="form-group">
+                       <label for="school_id">School: <span class="text-danger">*</span></label>
+                       <select name="school_id" id="school_id" class="form-control select" required>
+                           <option value="">Select School</option>
+                           @foreach($schools as $school)
+                               <option value="{{ $school->id }}" {{ old('school_id') == $school->id ? 'selected' : '' }}>
+                                   {{ $school->name }}
+                               </option>
+                           @endforeach
+                       </select>
+                   </div>
+               @else
+                   <!-- Hidden field for single school or non-super admin -->
+                   <input type="hidden" name="school_id" value="{{ Qs::getSetting('current_school_id') ?? 1 }}">
+               @endif
                 <h6>Personal data</h6>
                 <fieldset>
                     <div class="row">
@@ -150,9 +167,11 @@
                                 <label for="nal_id">Nationality: <span class="text-danger">*</span></label>
                                 <select data-placeholder="Choose..." required name="nal_id" id="nal_id" class="select-search form-control">
                                     <option value=""></option>
-                                    @foreach($nationals as $nal)
-                                        <option {{ (old('nal_id') == $nal->id ? 'selected' : '') }} value="{{ $nal->id }}">{{ $nal->name }}</option>
-                                    @endforeach
+                                    @if(isset($nationals) && $nationals && $nationals->count() > 0)
+                                        @foreach($nationals as $nal)
+                                            <option {{ (old('nal_id') == $nal->id ? 'selected' : '') }} value="{{ $nal->id }}">{{ $nal->name ?? 'Unknown Nationality' }}</option>
+                                        @endforeach
+                                    @endif
                                 </select>
                             </div>
                         </div>
@@ -161,9 +180,11 @@
                             <label for="state_id">State: <span class="text-danger">*</span></label>
                             <select onchange="getLGA(this.value)" required data-placeholder="Choose.." class="select-search form-control" name="state_id" id="state_id">
                                 <option value=""></option>
-                                @foreach($states as $st)
-                                    <option {{ (old('state_id') == $st->id ? 'selected' : '') }} value="{{ $st->id }}">{{ $st->name }}</option>
-                                @endforeach
+                                @if(isset($states) && $states && $states->count() > 0)
+                                    @foreach($states as $st)
+                                        <option {{ (old('state_id') == $st->id ? 'selected' : '') }} value="{{ $st->id }}">{{ $st->name ?? 'Unknown State' }}</option>
+                                    @endforeach
+                                @endif
                             </select>
                         </div>
 
@@ -207,9 +228,11 @@
                                 <label for="my_class_id">Class: <span class="text-danger">*</span></label>
                                 <select onchange="getClassSections(this.value)" data-placeholder="Choose..." required name="my_class_id" id="my_class_id" class="select-search form-control">
                                     <option value=""></option>
-                                    @foreach($my_classes as $c)
-                                        <option {{ (old('my_class_id') == $c->id ? 'selected' : '') }} value="{{ $c->id }}">{{ $c->name }}</option>
+                                    @if(isset($my_classes) && $my_classes && $my_classes->count() > 0)
+                                        @foreach($my_classes as $c)
+                                            <option {{ (old('my_class_id') == $c->id ? 'selected' : '') }} value="{{ $c->id }}">{{ $c->name ?? 'Unknown Class' }}</option>
                                         @endforeach
+                                    @endif
                                 </select>
                         </div>
                             </div>
@@ -228,9 +251,11 @@
                                 <label for="my_parent_id">Parent: </label>
                                 <select data-placeholder="Choose..."  name="my_parent_id" id="my_parent_id" class="select-search form-control">
                                     <option  value=""></option>
-                                    @foreach($parents as $p)
-                                        <option {{ (old('my_parent_id') == Qs::hash($p->id)) ? 'selected' : '' }} value="{{ Qs::hash($p->id) }}">{{ $p->name }}</option>
-                                    @endforeach
+                                    @if(isset($parents) && $parents && $parents->count() > 0)
+                                        @foreach($parents as $p)
+                                            <option {{ (old('my_parent_id') == Qs::hash($p->id)) ? 'selected' : '' }} value="{{ Qs::hash($p->id) }}">{{ $p->name ?? 'Unknown Parent' }}</option>
+                                        @endforeach
+                                    @endif
                                 </select>
                             </div>
                         </div>
@@ -253,9 +278,11 @@
                             <label for="dorm_id">Dormitory: </label>
                             <select data-placeholder="Choose..."  name="dorm_id" id="dorm_id" class="select-search form-control">
                                 <option value=""></option>
-                                @foreach($dorms as $d)
-                                    <option {{ (old('dorm_id') == $d->id) ? 'selected' : '' }} value="{{ $d->id }}">{{ $d->name }}</option>
+                                @if(isset($dorms) && $dorms && $dorms->count() > 0)
+                                    @foreach($dorms as $d)
+                                        <option {{ (old('dorm_id') == $d->id) ? 'selected' : '' }} value="{{ $d->id }}">{{ $d->name ?? 'Unknown Dorm' }}</option>
                                     @endforeach
+                                @endif
                             </select>
 
                         </div>
@@ -289,7 +316,6 @@
 @endsection
 
 @section('scripts')
-<script src="{{ asset('assets/js/student_filters.js') }}"></script>
 <script>
     $(document).ready(function() {
         // Initialize select2 for better dropdowns
@@ -304,5 +330,68 @@
             getClassSections(classId, targetSection);
         });
     });
+
+    function getLGA(state_id) {
+        var lgaSelect = $('#lga_id');
+        lgaSelect.html('<option value="">Loading...</option>');
+
+        if(state_id) {
+            $.ajax({
+                url: "{{ route('get_lga') }}",
+                type: "GET",
+                data: {state_id: state_id},
+                dataType: "json",
+                success: function(data) {
+                    lgaSelect.html('<option value="">Select LGA</option>');
+                    $.each(data.lgas, function(key, value) {
+                        lgaSelect.append('<option value="' + value.id + '">' + value.name + '</option>');
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.log('Error loading LGAs:', error);
+                    lgaSelect.html('<option value="">Error loading LGAs</option>');
+                }
+            });
+        } else {
+            lgaSelect.html('<option value="">Select State First</option>');
+        }
+    }
+
+    function getClassSections(class_id, target = '#section_id') {
+        var sectionSelect = $(target);
+        sectionSelect.html('<option value="">Loading...</option>');
+
+        if(class_id) {
+            $.ajax({
+                url: "{{ route('get_class_sections') }}",
+                type: "GET",
+                data: {class_id: class_id},
+                dataType: "json",
+                success: function(data) {
+                    sectionSelect.html('<option value="">Select Section</option>');
+                    $.each(data, function(key, value) {
+                        sectionSelect.append('<option value="' + value.id + '">' + value.name + '</option>');
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.log('Error loading sections:', error);
+                    sectionSelect.html('<option value="">Error loading sections</option>');
+                }
+            });
+        } else {
+            sectionSelect.html('<option value="">Select Class First</option>');
+        }
+    }
+
+    function applyStudentFilters() {
+        // Implement your filter logic here
+        console.log('Filters applied');
+    }
+
+    function clearStudentFilters() {
+        // Implement your clear filter logic here
+        $('#filter_school, #filter_class, #filter_gender, #filter_year').val('').trigger('change');
+        console.log('Filters cleared');
+    }
 </script>
 @endsection

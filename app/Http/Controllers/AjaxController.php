@@ -23,6 +23,9 @@ class AjaxController extends Controller
     public function get_lga(Request $req)
     {
         $s = $req->state_id;
+        if(!$s) {
+            return response()->json(['lgas' => []]);
+        }
         $lgas = $this->loc->getLGAs($s);
         return response()->json(['lgas' => $lgas]);
     }
@@ -38,16 +41,26 @@ class AjaxController extends Controller
         return response()->json(['classes' => $classes]);
     }
 
-    public function get_class_sections($class_id)
+    public function get_class_sections(Request $req)
     {
+        $class_id = $req->class_id;
+        if(!$class_id) {
+            return response()->json([]);
+        }
+
         $sections = $this->my_class->getClassSections($class_id);
         return $sections = $sections->map(function($q){
             return ['id' => $q->id, 'name' => $q->name];
         })->all();
     }
 
-    public function get_class_subjects($class_id)
+    public function get_class_subjects(Request $req)
     {
+        $class_id = $req->class_id;
+        if(!$class_id) {
+            return response()->json(['sections' => [], 'subjects' => []]);
+        }
+
         $sections = $this->my_class->getClassSections($class_id);
         $subjects = $this->my_class->findSubjectByClass($class_id);
 
@@ -64,5 +77,4 @@ class AjaxController extends Controller
 
         return $d;
     }
-
 }

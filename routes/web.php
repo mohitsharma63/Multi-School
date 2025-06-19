@@ -13,21 +13,20 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::post('ajax/get-classes-by-school', 'AjaxController@getClassesBySchool')->name('ajax.get-classes-by-school');
-
 Auth::routes();
 
-//Route::get('/test', 'TestController@index')->name('test');
+// Public routes
 Route::get('/privacy-policy', 'HomeController@privacy_policy')->name('privacy_policy');
 Route::get('/terms-of-use', 'HomeController@terms_of_use')->name('terms_of_use');
 
-
 Route::group(['middleware' => 'auth'], function () {
 
+    // Main routes
     Route::get('/', 'HomeController@dashboard')->name('home');
     Route::get('/home', 'HomeController@dashboard')->name('home');
     Route::get('/dashboard', 'HomeController@dashboard')->name('dashboard');
 
+    // Account routes
     Route::group(['prefix' => 'my_account'], function() {
         Route::get('/', 'MyAccountController@edit_profile')->name('my_account');
         Route::put('/', 'MyAccountController@update_profile')->name('my_account.update');
@@ -35,7 +34,7 @@ Route::group(['middleware' => 'auth'], function () {
     });
 
     /*************** Support Team *****************/
-    Route::group(['namespace' => 'SupportTeam',], function(){
+    Route::group(['namespace' => 'SupportTeam'], function(){
 
         /*************** Students *****************/
         Route::group(['prefix' => 'students'], function(){
@@ -51,7 +50,6 @@ Route::group(['middleware' => 'auth'], function () {
             Route::delete('promotion/reset_all', 'PromotionController@reset_all')->name('students.promotion_reset_all');
             Route::get('promotion/{fc?}/{fs?}/{tc?}/{ts?}', 'PromotionController@promotion')->name('students.promotion');
             Route::post('promote/{fc}/{fs}/{tc}/{ts}', 'PromotionController@promote')->name('students.promote');
-
         });
 
         /*************** Users *****************/
@@ -71,7 +69,6 @@ Route::group(['middleware' => 'auth'], function () {
 
             /*************** TimeTable Records *****************/
             Route::group(['prefix' => 'records'], function(){
-
                 Route::group(['middleware' => 'teamSA'], function(){
                     Route::get('manage/{ttr}', 'TimeTableController@manage')->name('ttr.manage');
                     Route::post('/', 'TimeTableController@store_record')->name('ttr.store');
@@ -82,7 +79,6 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('show/{ttr}', 'TimeTableController@show_record')->name('ttr.show');
                 Route::get('print/{ttr}', 'TimeTableController@print_record')->name('ttr.print');
                 Route::delete('/{ttr}', 'TimeTableController@delete_record')->name('ttr.destroy');
-
             });
 
             /*************** Time Slots *****************/
@@ -93,12 +89,10 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::delete('/{ts}', 'TimeTableController@delete_time_slot')->name('ts.destroy');
                 Route::put('/{ts}', 'TimeTableController@update_time_slot')->name('ts.update');
             });
-
         });
 
         /*************** Payments *****************/
         Route::group(['prefix' => 'payments'], function(){
-
             Route::get('manage/{class_id?}', 'PaymentController@manage')->name('payments.manage');
             Route::get('invoice/{id}/{year?}', 'PaymentController@invoice')->name('payments.invoice');
             Route::get('receipts/{id}', 'PaymentController@receipts')->name('payments.receipts');
@@ -121,7 +115,6 @@ Route::group(['middleware' => 'auth'], function () {
 
         /*************** Marks *****************/
         Route::group(['prefix' => 'marks'], function(){
-
            // FOR teamSA
             Route::group(['middleware' => 'teamSA'], function(){
                 Route::get('batch_fix', 'MarkController@batch_fix')->name('marks.batch_fix');
@@ -147,47 +140,40 @@ Route::group(['middleware' => 'auth'], function () {
             Route::post('select_year/{id}', 'MarkController@year_selected')->name('marks.year_select');
             Route::get('show/{id}/{year}', 'MarkController@show')->name('marks.show');
             Route::get('print/{id}/{exam_id}/{year}', 'MarkController@print_view')->name('marks.print');
-
         });
 
+        // Resource routes
         Route::resource('students', 'StudentRecordController');
         Route::resource('users', 'UserController');
         Route::resource('classes', 'MyClassController');
         Route::group(['middleware' => 'teamSA'], function () {
             Route::resource('sections', 'SectionController');
-            Route::get('ajax/get-classes-by-school', 'SectionController@getClassesBySchool');
-            Route::get('ajax/get-classes-for-subjects', 'SubjectController@getClassesBySchool');
+            Route::resource('subjects', 'SubjectController');
         });
-        Route::resource('subjects', 'SubjectController');
         Route::resource('grades', 'GradeController');
         Route::resource('exams', 'ExamController');
         Route::resource('dorms', 'DormController');
         Route::resource('payments', 'PaymentController');
-
     });
 
-    /************************ AJAX ****************************/
-    Route::group(['prefix' => 'ajax'], function() {
-        Route::get('get_lga/{state_id}', 'AjaxController@get_lga')->name('get_lga');
-        Route::get('get_class_sections/{class_id}', 'AjaxController@get_class_sections')->name('get_class_sections');
-        Route::get('get_class_subjects/{class_id}', 'AjaxController@get_class_subjects')->name('get_class_subjects');
+    /************************ AJAX Routes ****************************/
+    Route::group(['prefix' => 'ajax', 'namespace' => 'App\Http\Controllers'], function() {
+        // Changed from URL parameters to query parameters
+        Route::get('get_lga', 'AjaxController@get_lga')->name('get_lga');
+        Route::get('get_class_sections', 'AjaxController@get_class_sections')->name('get_class_sections');
+        Route::get('get_class_subjects', 'AjaxController@get_class_subjects')->name('get_class_subjects');
         Route::get('get-classes-by-school', 'AjaxController@getClassesBySchool')->name('get_classes_by_school');
     });
-
 });
 
 /************************ SUPER ADMIN ****************************/
 Route::group(['namespace' => 'SuperAdmin','middleware' => 'super_admin', 'prefix' => 'super_admin'], function(){
-
     Route::get('/settings', 'SettingController@index')->name('settings');
     Route::put('/settings', 'SettingController@update')->name('settings.update');
     Route::resource('schools', 'SchoolController');
-
 });
 
 /************************ PARENT ****************************/
-Route::group(['namespace' => 'MyParent','middleware' => 'my_parent',], function(){
-
+Route::group(['namespace' => 'MyParent','middleware' => 'my_parent'], function(){
     Route::get('/my_children', 'MyController@children')->name('my_children');
-
 });

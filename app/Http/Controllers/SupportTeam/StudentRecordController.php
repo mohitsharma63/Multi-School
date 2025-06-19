@@ -41,17 +41,23 @@ class StudentRecordController extends Controller
 
     public function create()
     {
-        $data['my_classes'] = $this->my_class->all();
-        $data['parents'] = $this->user->getUserByType('parent');
-        $data['dorms'] = $this->student->getAllDorms();
-        $data['states'] = $this->loc->getStates();
-        $data['nationals'] = $this->loc->getAllNationals();
+        // Initialize all data with proper null checking
+        $data['my_classes'] = $this->my_class->all() ?? collect();
+        $data['parents'] = $this->user->getUserByType('parent') ?? collect();
+        $data['dorms'] = $this->student->getAllDorms() ?? collect();
+        $data['states'] = $this->loc->getStates() ?? collect();
+        $data['nationals'] = $this->loc->getAllNationals() ?? collect();
 
         // Add schools data for super admin users
         if (Qs::userIsSuperAdmin()) {
             $data['schools'] = \App\Models\School::all() ?? collect();
         } else {
             $data['schools'] = collect();
+        }
+
+        // Debug: Check if states data exists
+        if(!$data['states'] || $data['states']->count() == 0) {
+            \Log::warning('No states found in database');
         }
 
         return view('pages.support_team.students.add', $data);
@@ -63,7 +69,8 @@ class StudentRecordController extends Controller
        $sr =  $req->only(Qs::getStudentData());
 
         // Add school ID to student record
-        $sr['school_id'] = $req->school_id ?? Qs::getSetting('current_school_id') ?? 1;
+        $current_school_id = Qs::getSetting('current_school_id');
+        $sr['school_id'] = $req->school_id ?? $current_school_id ?? 1;
 
         $ct = $this->my_class->findTypeByClass($req->my_class_id)->code;
        /* $ct = ($ct == 'J') ? 'JSS' : $ct;
@@ -89,7 +96,7 @@ class StudentRecordController extends Controller
 
         $sr['adm_no'] = $data['username'];
         $sr['user_id'] = $user->id;
-        $sr['session'] = Qs::getSetting('current_session');
+        $sr['session'] = Qs::getSetting('current_session') ?? date('Y') . '-' . (date('Y') + 1);
 
         $this->student->createRecord($sr); // Create Student
         return Qs::jsonStoreOk();
