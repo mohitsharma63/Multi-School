@@ -9,6 +9,52 @@
         </div>
 
         <div class="card-body">
+            <!-- Advanced Filter Section -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title">
+                                <i class="icon-filter4 mr-2"></i>Advanced Filters
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label>Filter by School:</label>
+                                    <select id="school-filter" class="form-control select">
+                                        <option value="">All Schools</option>
+                                        @foreach($schools as $school)
+                                            <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Filter by Grade Type:</label>
+                                    <select id="grade-type-filter" class="form-control select">
+                                        <option value="">All Grade Types</option>
+                                        @foreach($class_types as $ct)
+                                            <option value="{{ $ct->id }}">{{ $ct->name }}</option>
+                                        @endforeach
+                                        <option value="not_applicable">Not Applicable</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-end">
+                                        <button type="button" id="apply-filters" class="btn btn-primary mr-2">
+                                            <i class="icon-filter4 mr-1"></i> Apply Filters
+                                        </button>
+                                        <button type="button" id="reset-filters" class="btn btn-light">
+                                            <i class="icon-reload-alt mr-1"></i> Reset
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <ul class="nav nav-tabs nav-tabs-highlight">
                 <li class="nav-item"><a href="#all-grades" class="nav-link active" data-toggle="tab">Manage Grades</a></li>
                 <li class="nav-item"><a href="#new-grade" class="nav-link" data-toggle="tab"><i class="icon-plus2"></i> Add Grade</a></li>
@@ -21,6 +67,7 @@
                             <tr>
                                 <th>S/N</th>
                                 <th>Name</th>
+                                <th>School</th>
                                 <th>Grade Type</th>
                                 <th>Range</th>
                                 <th>Remark</th>
@@ -29,10 +76,13 @@
                             </thead>
                             <tbody>
                             @foreach($grades as $gr)
-                                <tr>
+                                <tr class="grade-row"
+                                    data-school-id="{{ $gr->school_id ?? '' }}"
+                                    data-grade-type-id="{{ $gr->class_type_id ?? 'not_applicable' }}">
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $gr->name }}</td>
-                                    <td>{{ $gr->class_type_id ? $class_types->where('id', $gr->class_type_id)->first()->name : ''}}</td>
+                                    <td>{{ $gr->school_id ? $schools->where('id', $gr->school_id)->first()->name ?? 'N/A' : 'All Schools' }}</td>
+                                    <td>{{ $gr->class_type_id ? $class_types->where('id', $gr->class_type_id)->first()->name : 'Not Applicable'}}</td>
                                     <td>{{ $gr->mark_from.' - '.$gr->mark_to }}</td>
                                     <td>{{ $gr->remark }}</td>
                                     <td class="text-center">
@@ -85,6 +135,18 @@
                                 </div>
 
                                 <div class="form-group row">
+                                    <label for="school_id" class="col-lg-3 col-form-label font-weight-semibold">School</label>
+                                    <div class="col-lg-9">
+                                        <select class="form-control select" name="school_id" id="school_id">
+                                            <option value="">All Schools</option>
+                                            @foreach($schools as $school)
+                                                <option {{ old('school_id') == $school->id ? 'selected' : '' }} value="{{ $school->id }}">{{ $school->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
                                     <label for="class_type_id" class="col-lg-3 col-form-label font-weight-semibold">Grade Type</label>
                                     <div class="col-lg-9">
                                         <select class="form-control select" name="class_type_id" id="class_type_id">
@@ -133,6 +195,8 @@
         </div>
     </div>
 
-    {{--Class List Ends--}}
+    {{--Grade List Ends--}}
+
+<script src="{{ asset('assets/js/grade_filters.js') }}"></script>
 
 @endsection

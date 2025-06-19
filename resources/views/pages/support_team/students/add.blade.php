@@ -1,15 +1,88 @@
 @extends('layouts.master')
 @section('page_title', 'Admit Student')
 @section('content')
-        <div class="card">
-            <div class="card-header bg-white header-elements-inline">
-                <h6 class="card-title">Please fill The form Below To Admit A New Student</h6>
 
-                {!! Qs::getPanelOptions() !!}
+    <!-- Advanced Student Admission Filters -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h6 class="card-title">Advanced Student Filters</h6>
+            <div class="header-elements">
+                <button type="button" class="btn btn-light btn-sm" data-toggle="collapse" data-target="#advancedFilters">
+                    <i class="icon-filter4"></i> Toggle Filters
+                </button>
             </div>
+        </div>
+        <div class="card-body collapse" id="advancedFilters">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Filter by School:</label>
+                        <select class="form-control select" id="filter_school">
+                            <option value="">All Schools</option>
+                            @if(Qs::userIsSuperAdmin() && isset($schools))
+                            @foreach($schools as $school)
+                                <option value="{{ $school->id }}">{{ $school->name ?? 'Unknown School' }}</option>
+                            @endforeach
+                        @else
+                            <option value="{{ Qs::getSetting('current_school_id') }}" selected>{{ Qs::getSetting('system_name') }}</option>
+                        @endif
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Filter by Class:</label>
+                        <select class="form-control select" id="filter_class">
+                            <option value="">All Classes</option>
+                            @foreach($my_classes as $c)
+                                <option value="{{ $c->id }}">{{ $c->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Filter by Gender:</label>
+                        <select class="form-control select" id="filter_gender">
+                            <option value="">All Genders</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Filter by Year:</label>
+                        <select class="form-control select" id="filter_year">
+                            <option value="">All Years</option>
+                            @for($y=date('Y', strtotime('-10 years')); $y<=date('Y'); $y++)
+                                <option value="{{ $y }}">{{ $y }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center">
+                <button type="button" class="btn btn-primary" onclick="applyStudentFilters()">
+                    <i class="icon-filter4"></i> Apply Filters
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="clearStudentFilters()">
+                    <i class="icon-reload-alt"></i> Clear Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header header-elements-inline">
+            <h6 class="card-title">Please fill The form To Admit A New Student</h6>
+            {!! Qs::getPanelOptions() !!}
+        </div></div>
 
             <form id="ajax-reg" method="post" enctype="multipart/form-data" class="wizard-form steps-validation" action="{{ route('students.store') }}" data-fouc>
                @csrf
+               <!-- Hidden field for school ID -->
+               <input type="hidden" name="school_id" value="{{ Qs::getSetting('current_school_id') ?? 1 }}">
                 <h6>Personal data</h6>
                 <fieldset>
                     <div class="row">
@@ -212,4 +285,24 @@
 
             </form>
         </div>
-    @endsection
+
+@endsection
+
+@section('scripts')
+<script src="{{ asset('assets/js/student_filters.js') }}"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize select2 for better dropdowns
+        $('.select').select2({
+            minimumResultsForSearch: Infinity
+        });
+
+        // Auto-populate class sections
+        $('#my_class_id, #filter_class').on('change', function() {
+            var classId = $(this).val();
+            var targetSection = $(this).attr('id') === 'filter_class' ? '#filter_section' : '#section_id';
+            getClassSections(classId, targetSection);
+        });
+    });
+</script>
+@endsection

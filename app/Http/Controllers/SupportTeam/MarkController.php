@@ -365,8 +365,10 @@ class MarkController extends Controller
 
     public function tabulation($exam_id = NULL, $class_id = NULL, $section_id = NULL)
     {
+        $d['schools'] = app(\App\Repositories\SchoolRepo::class)->getAll();
         $d['my_classes'] = $this->my_class->all();
         $d['exams'] = $this->exam->getExam(['year' => $this->year]);
+        $d['sections'] = $this->my_class->getAllSections();
         $d['selected'] = FALSE;
 
         if($class_id && $exam_id && $section_id){

@@ -26,7 +26,15 @@ class PromotionController extends Controller
         $d['old_year'] = $old_yr = Qs::getSetting('current_session');
         $old_yr = explode('-', $old_yr);
         $d['new_year'] = ++$old_yr[0].'-'.++$old_yr[1];
-        $d['my_classes'] = $this->my_class->all();
+
+        // Get classes for current school or all schools for super admin
+        $current_school_id = Qs::getSetting('current_school_id') ?? 1;
+        if (Qs::userIsSuperAdmin()) {
+            $d['my_classes'] = $this->my_class->all();
+            $d['schools'] = \App\Models\School::all();
+        } else {
+            $d['my_classes'] = $this->my_class->where('school_id', $current_school_id)->get();
+        }
         $d['sections'] = $this->my_class->getAllSections();
         $d['selected'] = false;
 
@@ -105,6 +113,11 @@ class PromotionController extends Controller
         $data['promotions'] = $this->student->getAllPromotions();
         $data['old_year'] = Qs::getCurrentSession();
         $data['new_year'] = Qs::getNextSession();
+
+        // Add schools data for filtering
+        if (Qs::userIsSuperAdmin()) {
+            $data['schools'] = \App\Models\School::all();
+        }
 
         return view('pages.support_team.students.promotion.reset', $data);
     }

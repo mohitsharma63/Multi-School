@@ -46,6 +46,14 @@ class StudentRecordController extends Controller
         $data['dorms'] = $this->student->getAllDorms();
         $data['states'] = $this->loc->getStates();
         $data['nationals'] = $this->loc->getAllNationals();
+
+        // Add schools data for super admin users
+        if (Qs::userIsSuperAdmin()) {
+            $data['schools'] = \App\Models\School::all() ?? collect();
+        } else {
+            $data['schools'] = collect();
+        }
+
         return view('pages.support_team.students.add', $data);
     }
 
@@ -53,6 +61,9 @@ class StudentRecordController extends Controller
     {
        $data =  $req->only(Qs::getUserRecord());
        $sr =  $req->only(Qs::getStudentData());
+
+        // Add school ID to student record
+        $sr['school_id'] = $req->school_id ?? Qs::getSetting('current_school_id') ?? 1;
 
         $ct = $this->my_class->findTypeByClass($req->my_class_id)->code;
        /* $ct = ($ct == 'J') ? 'JSS' : $ct;
@@ -95,8 +106,13 @@ class StudentRecordController extends Controller
 
     public function graduated()
     {
+        $data['students'] = $this->student->getAllGradStudents();
         $data['my_classes'] = $this->my_class->all();
-        $data['students'] = $this->student->allGradStudents();
+
+        // Add schools data for filtering
+        if (Qs::userIsSuperAdmin()) {
+            $data['schools'] = \App\Models\School::all();
+        }
 
         return view('pages.support_team.students.graduated', $data);
     }

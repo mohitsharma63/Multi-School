@@ -8,56 +8,101 @@
         </div>
 
         <div class="card-body">
-        <form method="post" action="{{ route('marks.tabulation_select') }}">
-                    @csrf
-                    <div class="row">
-
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label for="exam_id" class="col-form-label font-weight-bold">Exam:</label>
-                                            <select required id="exam_id" name="exam_id" class="form-control select" data-placeholder="Select Exam">
-                                                @foreach($exams as $exm)
-                                                    <option {{ ($selected && $exam_id == $exm->id) ? 'selected' : '' }} value="{{ $exm->id }}">{{ $exm->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label for="my_class_id" class="col-form-label font-weight-bold">Class:</label>
-                                            <select onchange="getClassSections(this.value)" required id="my_class_id" name="my_class_id" class="form-control select" data-placeholder="Select Class">
-                                                <option value=""></option>
-                                                @foreach($my_classes as $c)
-                                                    <option {{ ($selected && $my_class_id == $c->id) ? 'selected' : '' }} value="{{ $c->id }}">{{ $c->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="section_id" class="col-form-label font-weight-bold">Section:</label>
-                                <select required id="section_id" name="section_id" data-placeholder="Select Class First" class="form-control select">
-                                    @if($selected)
-                                        @foreach($sections->where('my_class_id', $my_class_id) as $s)
-                                            <option {{ $section_id == $s->id ? 'selected' : '' }} value="{{ $s->id }}">{{ $s->name }}</option>
+        <!-- Advanced Filter Section -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title">
+                                <i class="icon-filter4 mr-2"></i>Advanced Filters
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label>Filter by School:</label>
+                                    <select id="school-filter" class="form-control select" onchange="filterClassesBySchool(this.value)">
+                                        <option value="">All Schools</option>
+                                        @foreach($schools as $school)
+                                            <option value="{{ $school->id }}">{{ $school->name }}</option>
                                         @endforeach
-                                    @endif
-                                </select>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Filter by Exam:</label>
+                                    <select id="exam-filter" class="form-control select">
+                                        <option value="">All Exams</option>
+                                        @foreach($exams as $ex)
+                                            <option value="{{ $ex->id }}">{{ $ex->name }} - {{ $ex->year }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mt-4">
+                                        <button type="button" class="btn btn-primary" onclick="applyTabulationFilters()">
+                                            <i class="icon-filter4 mr-2"></i>Apply Filters
+                                        </button>
+                                        <button type="button" class="btn btn-light ml-2" onclick="resetTabulationFilters()">
+                                            <i class="icon-reload-alt mr-2"></i>Reset
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
 
+            <form method="post" action="{{ route('marks.tabulation_select') }}">
+                @csrf
+                <div class="row">
 
-                        <div class="col-md-2 mt-4">
-                            <div class="text-right mt-1">
-                                <button type="submit" class="btn btn-primary">View Sheet <i class="icon-paperplane ml-2"></i></button>
-                            </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="exam_id" class="col-form-label font-weight-bold">Exam:</label>
+                            <select required id="exam_id" name="exam_id" class="form-control select" data-placeholder="Select Exam">
+                                @foreach($exams as $exm)
+                                    <option {{ ($selected && $exam_id == $exm->id) ? 'selected' : '' }} value="{{ $exm->id }}" data-school-id="{{ $exm->school_id ?? '' }}">{{ $exm->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
-
                     </div>
 
-                </form>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="my_class_id" class="col-form-label font-weight-bold">Class:</label>
+                            <select onchange="getClassSections(this.value)" required id="my_class_id" name="my_class_id" class="form-control select" data-placeholder="Select Class">
+                                <option value=""></option>
+                                @foreach($my_classes as $c)
+                                    <option {{ ($selected && $my_class_id == $c->id) ? 'selected' : '' }} value="{{ $c->id }}" data-school-id="{{ $c->school_id }}">{{ $c->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="section_id" class="col-form-label font-weight-bold">Section:</label>
+                            <select required id="section_id" name="section_id" data-placeholder="Select Class First" class="form-control select">
+                                @if($selected)
+                                    @foreach($sections->where('my_class_id', $my_class_id) as $s)
+                                        <option {{ $section_id == $s->id ? 'selected' : '' }} value="{{ $s->id }}" data-class-id="{{ $s->my_class_id }}">{{ $s->name }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+                    </div>
+
+
+                    <div class="col-md-2 mt-4">
+                        <div class="text-right mt-1">
+                            <button type="submit" class="btn btn-primary">View Sheet <i class="icon-paperplane ml-2"></i></button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </form>
         </div>
     </div>
 

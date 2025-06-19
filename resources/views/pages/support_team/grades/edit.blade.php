@@ -21,6 +21,18 @@
                         </div>
 
                         <div class="form-group row">
+                            <label for="school_id" class="col-lg-3 col-form-label font-weight-semibold">School</label>
+                            <div class="col-lg-9">
+                                <select class="form-control select" name="school_id" id="school_id">
+                                    <option value="">All Schools</option>
+                                    @foreach($schools as $school)
+                                        <option {{ $gr->school_id == $school->id ? 'selected' : '' }} value="{{ $school->id }}">{{ $school->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
                             <label for="class_type_id" class="col-lg-3 col-form-label font-weight-semibold">Grade Type</label>
                             <div class="col-lg-9">
                                 <select class="form-control select" name="class_type_id" id="class_type_id">

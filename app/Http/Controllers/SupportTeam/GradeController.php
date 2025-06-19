@@ -7,15 +7,17 @@ use App\Http\Requests\Grade\GradeUpdate;
 use App\Repositories\ExamRepo;
 use App\Http\Controllers\Controller;
 use App\Repositories\MyClassRepo;
+use App\Repositories\SchoolRepo;
 
 class GradeController extends Controller
 {
-    protected $exam, $my_class;
+    protected $exam, $my_class, $school;
 
-    public function __construct(ExamRepo $exam, MyClassRepo $my_class)
+    public function __construct(ExamRepo $exam, MyClassRepo $my_class, SchoolRepo $school)
     {
         $this->exam = $exam;
         $this->my_class = $my_class;
+        $this->school = $school;
 
         $this->middleware('teamSA', ['except' => ['destroy',] ]);
         $this->middleware('super_admin', ['only' => ['destroy',] ]);
@@ -25,6 +27,7 @@ class GradeController extends Controller
     {
          $d['grades'] = $this->exam->allGrades();
          $d['class_types'] = $this->my_class->getTypes();
+         $d['schools'] = $this->school->getAll();
         return view('pages.support_team.grades.index', $d);
     }
 
@@ -39,6 +42,7 @@ class GradeController extends Controller
     public function edit($id)
     {
         $d['class_types'] = $this->my_class->getTypes();
+        $d['schools'] = $this->school->getAll();
         $d['gr'] = $this->exam->findGrade($id);
         return view('pages.support_team.grades.edit', $d);
     }

@@ -9,6 +9,51 @@
         </div>
 
         <div class="card-body">
+            <!-- Advanced Filter Section -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title">
+                                <i class="icon-filter4 mr-2"></i>Advanced Filters
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label>Filter by School:</label>
+                                    <select id="school-filter" class="form-control select">
+                                        <option value="">All Schools</option>
+                                        @foreach($schools as $school)
+                                            <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Filter by User Type:</label>
+                                    <select id="user-type-filter" class="form-control select">
+                                        <option value="">All User Types</option>
+                                        @foreach($user_types as $ut)
+                                            <option value="{{ $ut->title }}">{{ $ut->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-end">
+                                        <button type="button" id="apply-filters" class="btn btn-primary mr-2">
+                                            <i class="icon-filter4 mr-1"></i> Apply Filters
+                                        </button>
+                                        <button type="button" id="reset-filters" class="btn btn-light">
+                                            <i class="icon-reload-alt mr-1"></i> Reset
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <ul class="nav nav-tabs nav-tabs-highlight">
                 <li class="nav-item"><a href="#new-user" class="nav-link active" data-toggle="tab">Create New User</a></li>
                 <li class="nav-item dropdown">
@@ -39,6 +84,18 @@
                                     </div>
                                 </div>
 
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label for="school_id">School: <span class="text-danger">*</span></label>
+                                        <select required data-placeholder="Select School" class="form-control select" name="school_id" id="school_id">
+                                            <option value="">Select School</option>
+                                            @foreach($schools as $school)
+                                                <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label>Full Name: <span class="text-danger">*</span></label>
@@ -46,7 +103,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label>Address: <span class="text-danger">*</span></label>
                                         <input value="{{ old('address') }}" class="form-control" placeholder="Address" name="address" type="text" required>
@@ -183,6 +240,7 @@
                                 <th>S/N</th>
                                 <th>Photo</th>
                                 <th>Name</th>
+                                <th>School</th>
                                 <th>Username</th>
                                 <th>Phone</th>
                                 <th>Email</th>
@@ -191,10 +249,11 @@
                             </thead>
                             <tbody>
                             @foreach($users->where('user_type', $ut->title) as $u)
-                                <tr>
+                                <tr class="user-row" data-school-id="{{ $u->school_id ?? '' }}" data-user-type="{{ $u->user_type }}">
                                     <td>{{ $loop->iteration }}</td>
                                     <td><img class="rounded-circle" style="height: 40px; width: 40px;" src="{{ $u->photo }}" alt="photo"></td>
                                     <td>{{ $u->name }}</td>
+                                    <td>{{ $u->school ? $u->school->name : 'N/A' }}</td>
                                     <td>{{ $u->username }}</td>
                                     <td>{{ $u->phone }}</td>
                                     <td>{{ $u->email }}</td>
@@ -236,3 +295,86 @@
     {{--Student List Ends--}}
 
 @endsection
+
+<script>
+$(document).ready(function() {
+    // Initialize select2 if available
+    if ($.fn.select2) {
+        $('.select').select2({
+            minimumResultsForSearch: Infinity
+        });
+    }
+
+    // Apply filters button
+    $('#apply-filters').on('click', function(e) {
+        e.preventDefault();
+        applyUserFilters();
+    });
+
+    // Reset filters button
+    $('#reset-filters').on('click', function(e) {
+        e.preventDefault();
+        resetUserFilters();
+    });
+
+    // Auto-apply filters on change
+    $('#school-filter, #user-type-filter').on('change', function() {
+        applyUserFilters();
+    });
+});
+
+function applyUserFilters() {
+    var schoolFilter = $('#school-filter').val();
+    var userTypeFilter = $('#user-type-filter').val();
+    var visibleCount = 0;
+
+    $('.user-row').each(function() {
+        var $row = $(this);
+        var schoolId = $row.data('school-id');
+        var userType = $row.data('user-type');
+        var showRow = true;
+
+        // Apply school filter
+        if (schoolFilter && schoolId != schoolFilter) {
+            showRow = false;
+        }
+
+        // Apply user type filter
+        if (userTypeFilter && userType != userTypeFilter) {
+            showRow = false;
+        }
+
+        // Show/hide row
+        if (showRow) {
+            $row.show();
+            visibleCount++;
+        } else {
+            $row.hide();
+        }
+    });
+
+    // Show notification
+    if (schoolFilter || userTypeFilter) {
+        new PNotify({
+            title: 'Filters Applied',
+            text: 'Showing ' + visibleCount + ' users',
+            type: 'success'
+        });
+    }
+}
+
+function resetUserFilters() {
+    // Reset select values
+    $('#school-filter, #user-type-filter').val('').trigger('change');
+
+    // Show all rows
+    $('.user-row').show();
+
+    // Show notification
+    new PNotify({
+        title: 'Filters Reset',
+        text: 'All filters cleared',
+        type: 'info'
+    });
+}
+</script>

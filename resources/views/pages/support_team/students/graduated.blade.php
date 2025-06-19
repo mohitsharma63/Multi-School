@@ -2,6 +2,109 @@
 @section('page_title', 'Graduated Students')
 @section('content')
 
+<!-- Advanced Graduated Students Filters -->
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h6 class="card-title">Advanced Graduated Student Filters</h6>
+        <div class="header-elements">
+            <button type="button" class="btn btn-light btn-sm" data-toggle="collapse" data-target="#graduatedFilters">
+                <i class="icon-filter4"></i> Toggle Filters
+            </button>
+        </div>
+    </div>
+    <div class="card-body collapse" id="graduatedFilters">
+        <div class="row">
+            <div class="col-md-2">
+                <div class="form-group">
+                    <label>Filter by School:</label>
+                    <select class="form-control select" id="graduated_filter_school">
+                        <option value="">All Schools</option>
+                        @if(Qs::userIsSuperAdmin())
+                            @foreach($schools ?? [] as $school)
+                                <option value="{{ $school->id }}">{{ $school->name }}</option>
+                            @endforeach
+                        @else
+                            <option value="{{ Qs::getSetting('current_school_id') }}" selected>{{ Qs::getSetting('system_name') }}</option>
+                        @endif
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-group">
+                    <label>Graduation Year:</label>
+                    <select class="form-control select" id="graduated_filter_year">
+                        <option value="">All Years</option>
+                        @for($y=date('Y', strtotime('- 10 years')); $y<=date('Y'); $y++)
+                            <option value="{{ $y }}">{{ $y }}</option>
+                        @endfor
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-group">
+                    <label>Graduated Class:</label>
+                    <select class="form-control select" id="graduated_filter_class">
+                        <option value="">All Classes</option>
+                        @foreach($my_classes as $c)
+                            <option value="{{ $c->id }}">{{ $c->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-group">
+                    <label>Gender:</label>
+                    <select class="form-control select" id="graduated_filter_gender">
+                        <option value="">All Genders</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-group">
+                    <label>Performance:</label>
+                    <select class="form-control select" id="graduated_filter_performance">
+                        <option value="">All Performance</option>
+                        <option value="distinction">Distinction</option>
+                        <option value="credit">Credit</option>
+                        <option value="pass">Pass</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-group">
+                    <label>Search Name:</label>
+                    <input type="text" class="form-control" id="graduated_filter_name" placeholder="Student name...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <div>
+                        <button type="button" class="btn btn-primary btn-block" onclick="applyGraduatedFilters()">
+                            <i class="icon-search4"></i> Filter
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <button type="button" class="btn btn-secondary" onclick="clearGraduatedFilters()">
+                    <i class="icon-reload-alt"></i> Clear All Filters
+                </button>
+                <button type="button" class="btn btn-info" onclick="exportGraduatedStudents()">
+                    <i class="icon-file-excel"></i> Export to Excel
+                </button>
+                <button type="button" class="btn btn-warning" onclick="printGraduatedList()">
+                    <i class="icon-printer"></i> Print List
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-header header-elements-inline">
         <h6 class="card-title">Students Graduated</h6>

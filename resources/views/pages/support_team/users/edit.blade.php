@@ -23,10 +23,22 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label>Full Name: <span class="text-danger">*</span></label>
                                 <input value="{{ $user->name }}" required type="text" name="name" placeholder="Full Name" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="school_id">School: <span class="text-danger">*</span></label>
+                                <select required data-placeholder="Select School" class="form-control select" name="school_id" id="school_id">
+                                    <option value="">Select School</option>
+                                    @foreach($schools as $school)
+                                        <option {{ ($user->school_id == $school->id) ? 'selected' : '' }} value="{{ $school->id }}">{{ $school->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
 

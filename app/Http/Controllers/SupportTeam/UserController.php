@@ -7,6 +7,7 @@ use App\Http\Requests\UserRequest;
 use App\Repositories\LocationRepo;
 use App\Repositories\MyClassRepo;
 use App\Repositories\UserRepo;
+use App\Repositories\SchoolRepo;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -16,9 +17,9 @@ use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
-    protected $user, $loc, $my_class;
+    protected $user, $loc, $my_class, $school;
 
-    public function __construct(UserRepo $user, LocationRepo $loc, MyClassRepo $my_class)
+    public function __construct(UserRepo $user, LocationRepo $loc, MyClassRepo $my_class, SchoolRepo $school)
     {
         $this->middleware('teamSA', ['only' => ['index', 'store', 'edit', 'update'] ]);
         $this->middleware('super_admin', ['only' => ['reset_pass','destroy'] ]);
@@ -26,6 +27,7 @@ class UserController extends Controller
         $this->user = $user;
         $this->loc = $loc;
         $this->my_class = $my_class;
+        $this->school = $school;
     }
 
     public function index()
@@ -38,6 +40,7 @@ class UserController extends Controller
         $d['users'] = $this->user->getPTAUsers();
         $d['nationals'] = $this->loc->getAllNationals();
         $d['blood_groups'] = $this->user->getBloodGroups();
+        $d['schools'] = $this->school->getAll();
         return view('pages.support_team.users.index', $d);
     }
 
@@ -49,6 +52,7 @@ class UserController extends Controller
         $d['users'] = $this->user->getPTAUsers();
         $d['blood_groups'] = $this->user->getBloodGroups();
         $d['nationals'] = $this->loc->getAllNationals();
+        $d['schools'] = $this->school->getAll();
         return view('pages.support_team.users.edit', $d);
     }
 
@@ -73,6 +77,11 @@ class UserController extends Controller
         $data['user_type'] = $user_type;
         $data['photo'] = Qs::getDefaultUserImage();
         $data['code'] = strtoupper(Str::random(10));
+
+        // Assign school based on user role
+        if($req->school_id && in_array($user_type, ['teacher', 'student', 'parent', 'accountant', 'librarian'])) {
+            $data['school_id'] = $req->school_id;
+        }
 
         $user_is_staff = in_array($user_type, Qs::getStaff());
         $user_is_teamSA = in_array($user_type, Qs::getTeamSA());
