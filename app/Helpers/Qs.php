@@ -270,9 +270,17 @@ class Qs
 
     public static function getNextSession()
     {
-        $oy = self::getCurrentSession();
-        $old_yr = explode('-', $oy);
-        return ++$old_yr[0].'-'.++$old_yr[1];
+        $current_session = self::getSetting('current_session');
+        $current_session = explode('-', $current_session);
+
+        // Validate the session format and provide fallback
+        if (count($current_session) < 2 || !is_numeric($current_session[0]) || !is_numeric($current_session[1])) {
+            // Fallback to current year if session format is invalid
+            $current_year = date('Y');
+            return ($current_year + 1) . '-' . ($current_year + 2);
+        }
+
+        return ++$current_session[0].'-'.++$current_session[1];
     }
 
     public static function getSystemName()

@@ -151,7 +151,7 @@ class StudentRecordController extends Controller
 
     public function graduated()
     {
-        $data['students'] = $this->student->getAllGradStudents();
+        $data['students'] = $this->student->allGradStudents();
         $data['my_classes'] = $this->my_class->all();
 
         // Add schools data for filtering

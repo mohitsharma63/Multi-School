@@ -25,7 +25,15 @@ class PromotionController extends Controller
     {
         $d['old_year'] = $old_yr = Qs::getSetting('current_session');
         $old_yr = explode('-', $old_yr);
-        $d['new_year'] = ++$old_yr[0].'-'.++$old_yr[1];
+
+        // Validate the session format and provide fallback
+        if (count($old_yr) < 2 || !is_numeric($old_yr[0]) || !is_numeric($old_yr[1])) {
+            // Fallback to current year if session format is invalid
+            $current_year = date('Y');
+            $d['new_year'] = $current_year . '-' . ($current_year + 1);
+        } else {
+            $d['new_year'] = ++$old_yr[0].'-'.++$old_yr[1];
+        }
 
         // Get classes for current school or all schools for super admin
         $current_school_id = Qs::getSetting('current_school_id') ?? 1;
@@ -63,7 +71,15 @@ class PromotionController extends Controller
     {
         $oy = Qs::getSetting('current_session'); $d = [];
         $old_yr = explode('-', $oy);
-        $ny = ++$old_yr[0].'-'.++$old_yr[1];
+
+        // Validate the session format and provide fallback
+        if (count($old_yr) < 2 || !is_numeric($old_yr[0]) || !is_numeric($old_yr[1])) {
+            // Fallback to current year if session format is invalid
+            $current_year = date('Y');
+            $ny = $current_year . '-' . ($current_year + 1);
+        } else {
+            $ny = ++$old_yr[0].'-'.++$old_yr[1];
+        }
         $students = $this->student->getRecord(['my_class_id' => $fc, 'section_id' => $fs, 'session' => $oy ])->get()->sortBy('user.name');
 
         if($students->count() < 1){
