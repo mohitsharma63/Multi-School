@@ -1,3 +1,4 @@
+
 @extends('layouts.master')
 @section('page_title', 'Manage Class Sections')
 @section('content')
@@ -22,22 +23,12 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <label>Filter by School:</label>
-                                    @if(Qs::userIsSuperAdmin())
-                                        <select id="school-filter" class="form-control select" onchange="filterClassesBySchool(this.value)">
-                                            <option value="">All Schools</option>
-                                            @foreach($schools as $school)
-                                                <option value="{{ $school->id }}">{{ $school->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    @else
-                                        <select id="school-filter" class="form-control select" disabled>
-                                            @foreach($schools as $school)
-                                                @if($school->id == $user_school)
-                                                    <option value="{{ $school->id }}" selected>{{ $school->name }}</option>
-                                                @endif
-                                            @endforeach
-                                        </select>
-                                    @endif
+                                    <select id="school-filter" class="form-control select" onchange="filterClassesBySchool(this.value)">
+                                        <option value="">All Schools</option>
+                                        @foreach($schools as $school)
+                                            <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="col-md-4">
                                     <label>Filter by Class:</label>
@@ -85,23 +76,12 @@
                                 <div class="form-group row">
                                     <label class="col-lg-3 col-form-label font-weight-semibold">School <span class="text-danger">*</span></label>
                                     <div class="col-lg-9">
-                                        @if(Qs::userIsSuperAdmin())
-                                            <select required name="school_id" class="form-control select" id="school_id">
-                                                <option value="">Select School</option>
-                                                @foreach($schools as $school)
-                                                    <option value="{{ $school->id }}">{{ $school->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        @else
-                                            <select required name="school_id" class="form-control select" id="school_id" disabled>
-                                                @foreach($schools as $school)
-                                                    @if($school->id == $user_school)
-                                                        <option value="{{ $school->id }}" selected>{{ $school->name }}</option>
-                                                    @endif
-                                                @endforeach
-                                            </select>
-                                            <input type="hidden" name="school_id" value="{{ $user_school }}">
-                                        @endif
+                                        <select required name="school_id" class="form-control select" id="school_id">
+                                            <option value="">Select School</option>
+                                            @foreach($schools as $school)
+                                                <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                 </div>
 
