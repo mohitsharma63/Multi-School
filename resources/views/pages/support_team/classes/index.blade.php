@@ -22,12 +22,24 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <label>Filter by School:</label>
-                                    <select id="school-filter" class="form-control select">
-                                        <option value="">All Schools</option>
-                                        @foreach($schools as $school)
-                                            <option value="{{ $school->id }}">{{ $school->name }}</option>
-                                        @endforeach
-                                    </select>
+                                    @if(auth()->user()->user_type == 'admin' && auth()->user()->school_id)
+                                        <!-- Admin users can only filter by their assigned school -->
+                                        <select id="school-filter" class="form-control select" readonly disabled>
+                                            @foreach($schools as $school)
+                                                @if($school->id == auth()->user()->school_id)
+                                                    <option selected value="{{ $school->id }}">{{ $school->name }}</option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                    @else
+                                        <!-- Super admin and team members can filter by any school -->
+                                        <select id="school-filter" class="form-control select">
+                                            <option value="">All Schools</option>
+                                            @foreach($schools as $school)
+                                                <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    @endif
                                 </div>
                                 <div class="col-md-4">
                                     <label>Filter by Class Type:</label>
@@ -130,12 +142,26 @@
                                 <div class="form-group row">
                                     <label for="school_id" class="col-lg-3 col-form-label font-weight-semibold">School <span class="text-danger">*</span></label>
                                     <div class="col-lg-9">
-                                        <select required data-placeholder="Select School" class="form-control select" name="school_id" id="school_id">
-                                            <option value="">Select School</option>
-                                            @foreach($schools as $school)
-                                                <option {{ old('school_id') == $school->id ? 'selected' : '' }} value="{{ $school->id }}">{{ $school->name }}</option>
-                                            @endforeach
-                                        </select>
+                                        @if(auth()->user()->user_type == 'admin' && auth()->user()->school_id)
+                                            <!-- Admin users can only see their assigned school -->
+                                            <select required data-placeholder="Select School" class="form-control select" name="school_id" id="school_id" readonly disabled>
+                                                @foreach($schools as $school)
+                                                    @if($school->id == auth()->user()->school_id)
+                                                        <option selected value="{{ $school->id }}">{{ $school->name }}</option>
+                                                    @endif
+                                                @endforeach
+                                            </select>
+                                            <!-- Hidden input to ensure value is submitted -->
+                                            <input type="hidden" name="school_id" value="{{ auth()->user()->school_id }}">
+                                        @else
+                                            <!-- Super admin and team members can select any school -->
+                                            <select required data-placeholder="Select School" class="form-control select" name="school_id" id="school_id">
+                                                <option value="">Select School</option>
+                                                @foreach($schools as $school)
+                                                    <option {{ old('school_id') == $school->id ? 'selected' : '' }} value="{{ $school->id }}">{{ $school->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        @endif
                                     </div>
                                 </div>
 

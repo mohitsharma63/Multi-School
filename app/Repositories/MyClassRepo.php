@@ -42,7 +42,15 @@ class MyClassRepo
 
     public function getTypes()
     {
-        return ClassType::orderBy('name', 'asc')->get();
+        return ClassType::all();
+    }
+
+    public function getBySchool($schoolId)
+    {
+        return MyClass::with(['school', 'class_type', 'section'])
+                              ->where('school_id', $schoolId)
+                              ->orderBy('name')
+                              ->get();
     }
 
     public function findType($class_type_id)

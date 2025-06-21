@@ -26,9 +26,16 @@ class MyClassController extends Controller
 
     public function index()
     {
-        $d['my_classes'] = $this->my_class->all();
+        // If user is admin, only show classes from their assigned school
+        if (auth()->user()->user_type == 'admin' && auth()->user()->school_id) {
+            $d['my_classes'] = $this->my_class->getBySchool(auth()->user()->school_id);
+            $d['schools'] = $this->school->find(auth()->user()->school_id) ? [$this->school->find(auth()->user()->school_id)] : [];
+        } else {
+            $d['my_classes'] = $this->my_class->all();
+            $d['schools'] = $this->school->getAll();
+        }
+
         $d['class_types'] = $this->my_class->getTypes();
-        $d['schools'] = $this->school->getAll();
 
         return view('pages.support_team.classes.index', $d);
     }
@@ -40,6 +47,13 @@ class MyClassController extends Controller
         // Ensure school_id is provided
         if (empty($data['school_id'])) {
             return Qs::json('School selection is required', false);
+        }
+
+        // If user is admin, ensure they can only create classes for their assigned school
+        if (auth()->user()->user_type == 'admin' && auth()->user()->school_id) {
+            if ($data['school_id'] != auth()->user()->school_id) {
+                return Qs::json('You can only create classes for your assigned school', false);
+            }
         }
 
         $mc = $this->my_class->create($data);

@@ -22,12 +22,22 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <label>Filter by School:</label>
-                                    <select id="school-filter" class="form-control select">
-                                        <option value="">All Schools</option>
-                                        @foreach($schools as $school)
-                                            <option value="{{ $school->id }}">{{ $school->name }}</option>
-                                        @endforeach
-                                    </select>
+                                    @if(Qs::userIsSuperAdmin())
+                                        <select id="school-filter" class="form-control select">
+                                            <option value="">All Schools</option>
+                                            @foreach($schools as $school)
+                                                <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    @else
+                                        <select id="school-filter" class="form-control select" disabled>
+                                            @foreach($schools as $school)
+                                                @if($school->id == $user_school)
+                                                    <option value="{{ $school->id }}" selected>{{ $school->name }}</option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                    @endif
                                 </div>
                                 <div class="col-md-6">
                                     <div class="d-flex align-items-end">

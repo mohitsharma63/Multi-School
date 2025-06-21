@@ -13,6 +13,29 @@
                 <div class="col-md-6">
                     <form class="ajax-update" data-reload="#page-header" method="post" action="{{ route('dorms.update', $dorm->id) }}">
                         @csrf @method('PUT')
+
+                        @if(Qs::userIsSuperAdmin())
+                                <div class="form-group row">
+                                    <label class="col-lg-3 col-form-label font-weight-semibold">School <span class="text-danger">*</span></label>
+                                    <div class="col-lg-9">
+                                        <select data-placeholder="Choose School..." required name="school_id" class="form-control select-search">
+                                            @foreach($schools as $s)
+                                                <option {{ ($dorm->school_id == $s->id) ? 'selected' : '' }} value="{{ $s->id }}">{{ $s->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                @else
+                                {{-- For admin users, show school name but make it non-editable --}}
+                                <div class="form-group row">
+                                    <label class="col-lg-3 col-form-label font-weight-semibold">School</label>
+                                    <div class="col-lg-9">
+                                        <input type="text" class="form-control" value="{{ $dorm->school->name ?? 'No School Assigned' }}" readonly>
+                                        <small class="form-text text-muted">School assigned by Super Admin (cannot be changed)</small>
+                                    </div>
+                                </div>
+                                @endif
+
                         <div class="form-group row">
                             <label class="col-lg-3 col-form-label font-weight-semibold">Name <span class="text-danger">*</span></label>
                             <div class="col-lg-9">

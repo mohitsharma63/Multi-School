@@ -32,5 +32,11 @@ class DormRepo
         return Dorm::find($id);
     }
 
-
+public function getBySchool($school_id)
+    {
+        return Dorm::where('school_id', $school_id)->with('school')->get();
+    }
 }
+
+
+

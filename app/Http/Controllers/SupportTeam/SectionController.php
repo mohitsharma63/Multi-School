@@ -26,10 +26,21 @@ class SectionController extends Controller
 
     public function index()
     {
-        $d['my_classes'] = $this->my_class->all();
-        $d['sections'] = $this->my_class->getAllSections();
+        // If user is admin, only show classes and sections from their assigned school
+        if (auth()->user()->user_type == 'admin' && auth()->user()->school_id) {
+            $d['my_classes'] = $this->my_class->getBySchool(auth()->user()->school_id);
+            $d['sections'] = $this->my_class->getAllSections()->filter(function($section) {
+                return $section->my_class && $section->my_class->school_id == auth()->user()->school_id;
+            });
+            $d['schools'] = $this->school->find(auth()->user()->school_id) ? [$this->school->find(auth()->user()->school_id)] : [];
+        } else {
+            $d['my_classes'] = $this->my_class->all();
+            $d['sections'] = $this->my_class->getAllSections();
+            $d['schools'] = SchoolRepo::getAll();
+        }
+
         $d['teachers'] = $this->user->getUserByType('teacher');
-        $d['schools'] = SchoolRepo::getAll();
+        $d['user_school'] = auth()->user()->school_id;
 
         return view('pages.support_team.sections.index', $d);
     }

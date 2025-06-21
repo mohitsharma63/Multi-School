@@ -40,7 +40,19 @@ class UserController extends Controller
         $d['users'] = $this->user->getPTAUsers();
         $d['nationals'] = $this->loc->getAllNationals();
         $d['blood_groups'] = $this->user->getBloodGroups();
-        $d['schools'] = $this->school->getAll();
+
+        // If user is admin (not super admin), show only their assigned school
+        if(Qs::userIsAdmin() && !Qs::userIsSuperAdmin()) {
+            $userSchool = Auth::user()->school;
+            $d['schools'] = $userSchool ? collect([$userSchool]) : collect([]);
+            $d['user_school_fixed'] = true;
+            $d['selected_school_id'] = Auth::user()->school_id;
+        } else {
+            $d['schools'] = $this->school->getAll();
+            $d['user_school_fixed'] = false;
+            $d['selected_school_id'] = null;
+        }
+
         return view('pages.support_team.users.index', $d);
     }
 

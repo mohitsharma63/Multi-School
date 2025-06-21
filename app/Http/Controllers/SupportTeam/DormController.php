@@ -22,8 +22,15 @@ class DormController extends Controller
 
     public function index()
     {
-        $d['dorms'] = $this->dorm->getAll();
+        // If user is not super admin, filter dorms by their school
+        if (!Qs::userIsSuperAdmin() && auth()->user()->school_id) {
+            $d['dorms'] = $this->dorm->getBySchool(auth()->user()->school_id);
+        } else {
+            $d['dorms'] = $this->dorm->getAll();
+        }
+
         $d['schools'] = \App\Repositories\SchoolRepo::getAll();
+        $d['user_school'] = auth()->user()->school_id;
         return view('pages.support_team.dorms.index', $d);
     }
 
