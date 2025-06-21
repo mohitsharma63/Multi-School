@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 
 class StudentRecordController extends Controller
 {
@@ -66,6 +67,38 @@ class StudentRecordController extends Controller
         }
 
         return view('pages.support_team.students.add', $data);
+    }
+
+    /**
+     * Get sections for a specific class (AJAX endpoint)
+     */
+    public function getClassSections(Request $request)
+    {
+        $class_id = $request->get('class_id');
+
+        if (!$class_id) {
+            return response()->json(['error' => 'Class ID is required'], 400);
+        }
+
+        try {
+            $sections = $this->my_class->getClassSections($class_id);
+
+            // Format sections for select dropdown
+            $formatted_sections = $sections->map(function($section) {
+                return [
+                    'id' => $section->id,
+                    'name' => $section->name ?? 'Unknown Section'
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'sections' => $formatted_sections
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching class sections: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch sections'], 500);
+        }
     }
 
     public function store(StudentRecordCreate $req)
@@ -165,6 +198,14 @@ class StudentRecordController extends Controller
         $data['dorms'] = $this->student->getAllDorms();
         $data['states'] = $this->loc->getStates();
         $data['nationals'] = $this->loc->getAllNationals();
+
+        // Get sections for the current class
+        if($data['sr']->my_class_id) {
+            $data['sections'] = $this->my_class->getClassSections($data['sr']->my_class_id);
+        } else {
+            $data['sections'] = collect();
+        }
+
         return view('pages.support_team.students.edit', $data);
     }
 
@@ -209,5 +250,4 @@ class StudentRecordController extends Controller
 
         return back()->with('flash_success', __('msg.del_ok'));
     }
-
 }
