@@ -53,6 +53,16 @@ class MyClassRepo
                               ->get();
     }
 
+    public function with($relations)
+    {
+        return MyClass::with($relations);
+    }
+
+    public function getAllWithRelations($relations = [])
+    {
+        return MyClass::with($relations)->orderBy('name', 'asc')->get();
+    }
+
     public function findType($class_type_id)
     {
         return ClassType::find($class_type_id);

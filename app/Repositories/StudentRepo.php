@@ -101,9 +101,18 @@ class StudentRepo {
         return Promotion::destroy($id);
     }
 
-    public function getAllPromotions()
+    public function getAllPromotions($school_id = null)
     {
-        return Promotion::with(['student', 'fc', 'tc', 'fs', 'ts'])->where(['from_session' => Qs::getCurrentSession(), 'to_session' => Qs::getNextSession()])->get();
+        $query = Promotion::with(['student', 'fc', 'tc', 'fs', 'ts'])
+            ->where(['from_session' => Qs::getCurrentSession(), 'to_session' => Qs::getNextSession()]);
+
+        if ($school_id && !Qs::userIsSuperAdmin()) {
+            $query->whereHas('fc', function($q) use ($school_id) {
+                $q->where('school_id', $school_id);
+            });
+        }
+
+        return $query->get();
     }
 
     public function getPromotions(array $where)

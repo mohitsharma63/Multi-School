@@ -31,10 +31,11 @@ class ExamController extends Controller
     public function store(ExamCreate $req)
     {
         $data = $req->only(['name', 'term', 'school_id']);
-        $data['year'] = Qs::getSetting('current_session');
+        $data['year'] = Qs::getCurrentSession();
 
         $this->exam->create($data);
-        return back()->with('flash_success', __('msg.store_ok'));
+
+        return Qs::jsonStoreOk();
     }
 
     public function edit($id)

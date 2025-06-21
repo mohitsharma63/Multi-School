@@ -44,9 +44,12 @@ Route::group(['middleware' => 'auth'], function () {
             Route::get('graduated', 'StudentRecordController@graduated')->name('students.graduated');
             Route::put('not_graduated/{id}', 'StudentRecordController@not_graduated')->name('st.not_graduated');
             Route::get('list/{class_id}', 'StudentRecordController@listByClass')->name('students.list')->middleware('teamSAT');
+            Route::get('management-dashboard', function() {
+                return view('pages.support_team.students.management_dashboard');
+            })->name('students.dashboard')->middleware('teamSA');
 Route::post('students/get-class-sections', 'StudentRecordController@getClassSections')->name('students.get-class-sections');
             /* Promotions */
-            Route::post('promote_selector', 'PromotionController@selector')->name('students.promote_selector');
+            Route::post('promotion_selector', 'PromotionController@selector')->name('students.promotion_selector');
             Route::get('promotion/manage', 'PromotionController@manage')->name('students.promotion_manage');
             Route::delete('promotion/reset/{pid}', 'PromotionController@reset')->name('students.promotion_reset');
             Route::delete('promotion/reset_all', 'PromotionController@reset_all')->name('students.promotion_reset_all');

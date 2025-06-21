@@ -38,24 +38,71 @@ class PromotionController extends Controller
         // Get classes for current school or all schools for super admin
         $current_school_id = Qs::getSetting('current_school_id') ?? 1;
         if (Qs::userIsSuperAdmin()) {
-            $d['my_classes'] = $this->my_class->all();
-            $d['schools'] = \App\Models\School::all();
+            $d['my_classes'] = $this->my_class->with('school')->orderBy('school_id')->get();
+            $d['schools'] = \App\Models\School::orderBy('name')->get();
         } else {
-            $d['my_classes'] = $this->my_class->where('school_id', $current_school_id)->get();
+            $d['my_classes'] = $this->my_class->with('school')->where('school_id', $current_school_id)->orderBy('name')->get();
+            $d['schools'] = collect(); // Empty collection for non-super admin
         }
-        $d['sections'] = $this->my_class->getAllSections();
+
+        // Get sections based on school filtering with proper relationships
+        if (Qs::userIsSuperAdmin()) {
+            $d['sections'] = $this->my_class->getAllSections()->load('my_class.school');
+        } else {
+            $d['sections'] = $this->my_class->getAllSections()->filter(function($section) use ($current_school_id) {
+                return $section->my_class && $section->my_class->school_id == $current_school_id;
+            });
+        }
+
         $d['selected'] = false;
+        $d['current_school_id'] = $current_school_id;
 
         if($fc && $fs && $tc && $ts){
+            // Validate that selected classes belong to the user's school (if not super admin)
+            if (!Qs::userIsSuperAdmin()) {
+                $from_class = $this->my_class->find($fc);
+                $to_class = $this->my_class->find($tc);
+
+                if (!$from_class || !$to_class ||
+                    $from_class->school_id != $current_school_id ||
+                    $to_class->school_id != $current_school_id) {
+                    return redirect()->route('students.promotion')->with('flash_danger', 'Invalid class selection for your school.');
+                }
+            }
+
+            // Validate that from and to classes belong to the same school
+            $from_class = $this->my_class->find($fc);
+            $to_class = $this->my_class->find($tc);
+
+            if ($from_class && $to_class && $from_class->school_id != $to_class->school_id) {
+                return redirect()->route('students.promotion')->with('flash_danger', 'Cannot promote students between different schools.');
+            }
+
             $d['selected'] = true;
             $d['fc'] = $fc;
             $d['fs'] = $fs;
             $d['tc'] = $tc;
             $d['ts'] = $ts;
-            $d['students'] = $sts = $this->student->getRecord(['my_class_id' => $fc, 'section_id' => $fs, 'session' => $d['old_year']])->get();
+
+            // Get students with proper school filtering and relationships
+            $query = $this->student->getRecord(['my_class_id' => $fc, 'section_id' => $fs, 'session' => $d['old_year']])
+                ->with(['user', 'my_class.school', 'section']);
+
+            // Add school filtering for non-super admin users
+            if (!Qs::userIsSuperAdmin()) {
+                $query->whereHas('my_class', function($q) use ($current_school_id) {
+                    $q->where('school_id', $current_school_id);
+                });
+            }
+
+            $d['students'] = $sts = $query->get();
+            $d['from_class'] = $from_class;
+            $d['to_class'] = $to_class;
+            $d['from_section'] = $d['sections']->where('id', $fs)->first();
+            $d['to_section'] = $d['sections']->where('id', $ts)->first();
 
             if($sts->count() < 1){
-                return redirect()->route('students.promotion')->with('flash_success', __('msg.nstp'));
+                return redirect()->route('students.promotion')->with('flash_info', 'No students found for promotion in the selected class and section.');
             }
         }
 
@@ -69,7 +116,21 @@ class PromotionController extends Controller
 
     public function promote(Request $req, $fc, $fs, $tc, $ts)
     {
-        $oy = Qs::getSetting('current_session'); $d = [];
+        $current_school_id = Qs::getSetting('current_school_id') ?? 1;
+
+        // Validate that selected classes belong to the user's school (if not super admin)
+        if (!Qs::userIsSuperAdmin()) {
+            $from_class = $this->my_class->find($fc);
+            $to_class = $this->my_class->find($tc);
+
+            if (!$from_class || !$to_class ||
+                $from_class->school_id != $current_school_id ||
+                $to_class->school_id != $current_school_id) {
+                return redirect()->route('students.promotion')->with('flash_danger', 'Invalid class selection for your school.');
+            }
+        }
+
+        $oy = Qs::getSetting('current_session');
         $old_yr = explode('-', $oy);
 
         // Validate the session format and provide fallback
@@ -80,60 +141,132 @@ class PromotionController extends Controller
         } else {
             $ny = ++$old_yr[0].'-'.++$old_yr[1];
         }
-        $students = $this->student->getRecord(['my_class_id' => $fc, 'section_id' => $fs, 'session' => $oy ])->get()->sortBy('user.name');
+
+        // Get students with proper school filtering
+        $query = $this->student->getRecord(['my_class_id' => $fc, 'section_id' => $fs, 'session' => $oy]);
+
+        // Add school filtering for non-super admin users
+        if (!Qs::userIsSuperAdmin()) {
+            $query->whereHas('my_class', function($q) use ($current_school_id) {
+                $q->where('school_id', $current_school_id);
+            });
+        }
+
+        $students = $query->get()->sortBy('user.name');
 
         if($students->count() < 1){
             return redirect()->route('students.promotion')->with('flash_danger', __('msg.srnf'));
         }
 
+        // Track promotion statistics
+        $stats = ['promoted' => 0, 'repeated' => 0, 'graduated' => 0];
+        $errors = [];
+
         foreach($students as $st){
             $p = 'p-'.$st->id;
             $p = $req->$p;
-            if($p === 'P'){ // Promote
-                $d['my_class_id'] = $tc;
-                $d['section_id'] = $ts;
-                $d['session'] = $ny;
-            }
-            if($p === 'D'){ // Don't Promote
-                $d['my_class_id'] = $fc;
-                $d['section_id'] = $fs;
-                $d['session'] = $ny;
-            }
-            if($p === 'G'){ // Graduated
-                $d['my_class_id'] = $fc;
-                $d['section_id'] = $fs;
-                $d['grad'] = 1;
-                $d['grad_date'] = $oy;
-            }
 
-            $this->student->updateRecord($st->id, $d);
+            // Skip if no action specified
+            if (!$p) continue;
 
-//            Insert New Promotion Data
-            $promote['from_class'] = $fc;
-            $promote['from_section'] = $fs;
-            $promote['grad'] = ($p === 'G') ? 1 : 0;
-            $promote['to_class'] = in_array($p, ['D', 'G']) ? $fc : $tc;
-            $promote['to_section'] = in_array($p, ['D', 'G']) ? $fs : $ts;
-            $promote['student_id'] = $st->user_id;
-            $promote['from_session'] = $oy;
-            $promote['to_session'] = $ny;
-            $promote['status'] = $p;
+            try {
+                // Reset $d array for each student
+                $d = [];
 
-            $this->student->createPromotion($promote);
+                if($p === 'P'){ // Promote
+                    $d['my_class_id'] = $tc;
+                    $d['section_id'] = $ts;
+                    $d['session'] = $ny;
+                    $d['grad'] = 0;
+                    $d['grad_date'] = null;
+                    $stats['promoted']++;
+                }
+                if($p === 'D'){ // Don't Promote
+                    $d['my_class_id'] = $fc;
+                    $d['section_id'] = $fs;
+                    $d['session'] = $ny;
+                    $d['grad'] = 0;
+                    $d['grad_date'] = null;
+                    $stats['repeated']++;
+                }
+                if($p === 'G'){ // Graduated
+                    $d['my_class_id'] = $fc;
+                    $d['section_id'] = $fs;
+                    $d['session'] = $ny;
+                    $d['grad'] = 1;
+                    $d['grad_date'] = $oy;
+                    $stats['graduated']++;
+                }
+
+                $this->student->updateRecord($st->id, $d);
+
+                // Insert New Promotion Data
+                $promote = [
+                    'from_class' => $fc,
+                    'from_section' => $fs,
+                    'grad' => ($p === 'G') ? 1 : 0,
+                    'to_class' => in_array($p, ['D', 'G']) ? $fc : $tc,
+                    'to_section' => in_array($p, ['D', 'G']) ? $fs : $ts,
+                    'student_id' => $st->user_id,
+                    'from_session' => $oy,
+                    'to_session' => $ny,
+                    'status' => $p
+                ];
+
+                $this->student->createPromotion($promote);
+
+            } catch (\Exception $e) {
+                $errors[] = "Error processing {$st->user->name}: " . $e->getMessage();
+            }
         }
-        return redirect()->route('students.promotion')->with('flash_success', __('msg.update_ok'));
+
+        // Create success message with statistics
+        $message = "Promotion completed successfully! ";
+        $message .= "Promoted: {$stats['promoted']}, ";
+        $message .= "Repeated: {$stats['repeated']}, ";
+        $message .= "Graduated: {$stats['graduated']}";
+
+        if (!empty($errors)) {
+            $message .= ". However, there were some errors: " . implode('; ', $errors);
+        }
+
+        return redirect()->route('students.promotion')->with('flash_success', $message);
     }
 
     public function manage()
     {
-        $data['promotions'] = $this->student->getAllPromotions();
+        $current_school_id = Qs::getSetting('current_school_id') ?? 1;
+
+        // Get promotions with proper school filtering and relationships
+        if (Qs::userIsSuperAdmin()) {
+            $data['promotions'] = $this->student->getAllPromotions()
+                ->load(['student', 'fc.school', 'tc.school', 'fs', 'ts'])
+                ->sortBy('fc.school.name')
+                ->sortBy('student.name');
+            $data['schools'] = \App\Models\School::orderBy('name')->get();
+        } else {
+            // Filter promotions by school for non-super admin users
+            $data['promotions'] = $this->student->getAllPromotions()
+                ->load(['student', 'fc.school', 'tc.school', 'fs', 'ts'])
+                ->filter(function($promotion) use ($current_school_id) {
+                    return $promotion->fc && $promotion->fc->school_id == $current_school_id;
+                })
+                ->sortBy('student.name');
+            $data['schools'] = collect(); // Empty collection
+        }
+
         $data['old_year'] = Qs::getCurrentSession();
         $data['new_year'] = Qs::getNextSession();
+        $data['current_school_id'] = $current_school_id;
 
-        // Add schools data for filtering
-        if (Qs::userIsSuperAdmin()) {
-            $data['schools'] = \App\Models\School::all();
-        }
+        // Calculate statistics
+        $promotions = $data['promotions'];
+        $data['statistics'] = [
+            'total' => $promotions->count(),
+            'promoted' => $promotions->where('status', 'P')->count(),
+            'repeated' => $promotions->where('status', 'D')->count(),
+            'graduated' => $promotions->where('status', 'G')->count(),
+        ];
 
         return view('pages.support_team.students.promotion.reset', $data);
     }

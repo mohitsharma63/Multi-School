@@ -151,8 +151,25 @@ class StudentRecordController extends Controller
 
     public function graduated()
     {
-        $data['students'] = $this->student->allGradStudents();
-        $data['my_classes'] = $this->my_class->all();
+        $current_school_id = Qs::getSetting('current_school_id') ?? 1;
+
+        // Get graduated students with proper school filtering
+        if (Qs::userIsSuperAdmin()) {
+            $data['students'] = $this->student->allGradStudents()->load(['user', 'my_class.school', 'section']);
+            $data['my_classes'] = $this->my_class->with('school')->orderBy('school_id')->get();
+            $data['schools'] = \App\Models\School::orderBy('name')->get();
+        } else {
+            // Filter by current school for non-super admin
+            $data['students'] = $this->student->allGradStudents()
+                ->load(['user', 'my_class.school', 'section'])
+                ->filter(function($student) use ($current_school_id) {
+                    return $student->my_class && $student->my_class->school_id == $current_school_id;
+                });
+            $data['my_classes'] = $this->my_class->with('school')->where('school_id', $current_school_id)->get();
+            $data['schools'] = collect();
+        }
+
+        $data['current_school_id'] = $current_school_id;
 
         // Add schools data for filtering
         if (Qs::userIsSuperAdmin()) {
