@@ -10,6 +10,8 @@ use App\Repositories\LocationRepo;
 use App\Repositories\MyClassRepo;
 use App\Repositories\StudentRepo;
 use App\Repositories\UserRepo;
+use App\Repositories\DormRepo;
+use App\Repositories\SchoolRepo;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -18,18 +20,20 @@ use Illuminate\Support\Str;
 
 class StudentRecordController extends Controller
 {
-    protected $loc, $my_class, $user, $student;
+    protected $user, $my_class, $student, $loc, $dorm, $school;
 
-   public function __construct(LocationRepo $loc, MyClassRepo $my_class, UserRepo $user, StudentRepo $student)
+   public function __construct(UserRepo $user, MyClassRepo $my_class, StudentRepo $student, LocationRepo $loc, DormRepo $dorm, SchoolRepo $school)
    {
        $this->middleware('teamSA', ['only' => ['edit','update', 'reset_pass', 'create', 'store', 'graduated'] ]);
        $this->middleware('super_admin', ['only' => ['destroy',] ]);
 
-        $this->loc = $loc;
-        $this->my_class = $my_class;
         $this->user = $user;
+        $this->my_class = $my_class;
         $this->student = $student;
-   }
+        $this->loc = $loc;
+        $this->dorm = $dorm;
+        $this->school = $school;
+    }
 
     public function reset_pass($st_id)
     {
@@ -47,6 +51,7 @@ class StudentRecordController extends Controller
         $data['dorms'] = $this->student->getAllDorms() ?? collect();
         $data['states'] = $this->loc->getStates() ?? collect();
         $data['nationals'] = $this->loc->getAllNationals() ?? collect();
+        $data['schools'] = $this->school->getAll() ?? collect();
 
         // Add schools data for super admin users
         if (Qs::userIsSuperAdmin()) {

@@ -208,9 +208,8 @@ function loadClassesBySchool(schoolId) {
 
     // AJAX call to get classes by school
     $.ajax({
-        url: '/ajax/get-classes-by-school',
+        url: '/ajax/get-classes-by-school/' + schoolId,
         type: 'GET',
-        data: { school_id: schoolId },
         success: function(response) {
             var options = '<option value="">Select Class</option>';
 

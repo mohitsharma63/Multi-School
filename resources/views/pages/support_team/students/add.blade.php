@@ -2,78 +2,7 @@
 @section('page_title', 'Admit Student')
 @section('content')
 
-    <!-- Advanced Student Admission Filters -->
-    <div class="card">
-        <div class="card-header bg-primary text-white">
-            <h6 class="card-title">Advanced Student Filters</h6>
-            <div class="header-elements">
-                <button type="button" class="btn btn-light btn-sm" data-toggle="collapse" data-target="#advancedFilters">
-                    <i class="icon-filter4"></i> Toggle Filters
-                </button>
-            </div>
-        </div>
-        <div class="card-body collapse" id="advancedFilters">
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label>Filter by School:</label>
-                        <select class="form-control select" id="filter_school">
-                            <option value="">All Schools</option>
-                            @if(Qs::userIsSuperAdmin() && isset($schools) && $schools->count() > 0)
-                            @foreach($schools as $school)
-                                <option value="{{ $school->id }}">{{ $school->name ?? 'Unknown School' }}</option>
-                            @endforeach
-                        @else
-                            <option value="{{ Qs::getSetting('current_school_id') ?? 1 }}" selected>{{ Qs::getSetting('system_name') ?? 'Default School' }}</option>
-                        @endif
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label>Filter by Class:</label>
-                        <select class="form-control select" id="filter_class">
-                            <option value="">All Classes</option>
-                            @if(isset($my_classes) && $my_classes->count() > 0)
-                                @foreach($my_classes as $c)
-                                    <option value="{{ $c->id }}">{{ $c->name ?? 'Unknown Class' }}</option>
-                                @endforeach
-                            @endif
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label>Filter by Gender:</label>
-                        <select class="form-control select" id="filter_gender">
-                            <option value="">All Genders</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label>Filter by Year:</label>
-                        <select class="form-control select" id="filter_year">
-                            <option value="">All Years</option>
-                            @for($y=date('Y', strtotime('-10 years')); $y<=date('Y'); $y++)
-                                <option value="{{ $y }}">{{ $y }}</option>
-                            @endfor
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="text-center">
-                <button type="button" class="btn btn-primary" onclick="applyStudentFilters()">
-                    <i class="icon-filter4"></i> Apply Filters
-                </button>
-                <button type="button" class="btn btn-secondary" onclick="clearStudentFilters()">
-                    <i class="icon-reload-alt"></i> Clear Filters
-                </button>
-            </div>
-        </div>
-    </div>
+
 
     <div class="card">
         <div class="card-header header-elements-inline">
@@ -102,17 +31,7 @@
                 <h6>Personal data</h6>
                 <fieldset>
                     <div class="row">
-                          <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="school_id">School: <span class="text-danger">*</span></label>
-                                        <select required data-placeholder="Select School" class="form-control select" name="school_id" id="school_id">
-                                            <option value="">Select School</option>
-                                            @foreach($schools as $school)
-                                                <option value="{{ $school->id }}">{{ $school->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
+
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>Full Name: <span class="text-danger">*</span></label>
@@ -251,7 +170,7 @@
                             <div class="form-group">
                                 <label for="section_id">Section: <span class="text-danger">*</span></label>
                                 <select data-placeholder="Select Class First" required name="section_id" id="section_id" class="select-search form-control">
-                                    <option {{ (old('section_id')) ? 'selected' : '' }} value="{{ old('section_id') }}">{{ (old('section_id')) ? 'Selected' : '' }}</option>
+                                    <option value="">Select Section</option>
                                 </select>
                             </div>
                         </div>

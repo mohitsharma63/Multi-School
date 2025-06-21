@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use Illuminate\Database\QueryException;
 use App\Models\Setting;
 use App\Models\StudentRecord;
 use App\Models\Subject;
@@ -364,4 +365,54 @@ class Qs
         return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     }
 
+
+
+
+
+    /**
+     * Handle database save operations with duplicate entry protection
+     */
+    public static function safeSave($model, $data, $uniqueFields = [])
+    {
+        try {
+            if (is_array($data)) {
+                $model->fill($data);
+            }
+
+            return $model->save();
+        } catch (QueryException $e) {
+            if ($e->errorInfo[1] == 1062) { // Duplicate entry
+                $duplicateField = self::extractDuplicateField($e->getMessage(), $uniqueFields);
+                throw new \Exception("Duplicate entry for {$duplicateField}. This record already exists.");
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Extract which field caused the duplicate entry error
+     */
+    private static function extractDuplicateField($errorMessage, $uniqueFields = [])
+    {
+        foreach ($uniqueFields as $field) {
+            if (strpos($errorMessage, $field) !== false) {
+                return $field;
+            }
+        }
+
+        // Try to extract from error message
+        if (preg_match("/for key '(.+?)'/", $errorMessage, $matches)) {
+            return $matches[1];
+        }
+
+        return 'unknown field';
+    }
+
+    /**
+     * Check if record exists before creating
+     */
+    public static function recordExists($model, $conditions)
+    {
+        return $model::where($conditions)->exists();
+    }
 }

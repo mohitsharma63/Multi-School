@@ -31,15 +31,31 @@ class AjaxController extends Controller
         return response()->json($lgas);
     }
 
-    public function getClassesBySchool(Request $req)
+    public function getClassesBySchool(Request $req, $school_id = null)
     {
-        $schoolId = $req->school_id;
-        if (!$schoolId) {
-            return response()->json(['classes' => []]);
-        }
+        try {
+            $id = $school_id ?: $req->school_id;
 
-        $classes = MyClass::where('school_id', $schoolId)->orderBy('name')->get();
-        return response()->json(['classes' => $classes]);
+            if (!$id) {
+                return response()->json(['classes' => []]);
+            }
+
+            $classes = MyClass::where('school_id', $id)
+                            ->orderBy('name')
+                            ->get(['id', 'name', 'school_id']);
+
+            return response()->json([
+                'success' => true,
+                'classes' => $classes
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching classes',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function get_class_sections(Request $req)
@@ -78,6 +94,4 @@ class AjaxController extends Controller
 
         return $d;
     }
-
-
 }

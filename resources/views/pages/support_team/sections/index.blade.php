@@ -194,7 +194,6 @@ $(document).ready(function() {
         loadClassesBySchool(schoolId);
     });
 });
-
 function loadClassesBySchool(schoolId) {
     if (!schoolId) {
         $('#my_class_id').html('<option value="">Select School First</option>');
@@ -206,9 +205,8 @@ function loadClassesBySchool(schoolId) {
 
     // AJAX call to get classes by school
     $.ajax({
-        url: '/ajax/get-classes-by-school',
+        url: '/ajax/get-classes-by-school/' + schoolId,
         type: 'GET',
-        data: { school_id: schoolId },
         success: function(response) {
             var options = '<option value="">Select Class</option>';
 
@@ -229,7 +227,8 @@ function loadClassesBySchool(schoolId) {
                 });
             }
         },
-        error: function() {
+        error: function(xhr, status, error) {
+            console.error("AJAX Error:", status, error);
             $('#my_class_id').html('<option value="">Error loading classes</option>');
             showNotification('Error loading classes. Please try again.', 'error');
         }

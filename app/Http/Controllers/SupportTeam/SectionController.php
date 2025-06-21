@@ -68,9 +68,8 @@ class SectionController extends Controller
         return back()->with('flash_success', __('msg.del_ok'));
     }
 
-    public function getClassesBySchool()
+    public function getClassesBySchool($schoolId)
     {
-        $schoolId = request('school_id');
         $classes = $this->my_class->getWhere(['school_id' => $schoolId]);
         return response()->json(['classes' => $classes]);
     }
