@@ -159,12 +159,12 @@ Route::group(['middleware' => 'auth'], function () {
     });
 
     /************************ AJAX Routes ****************************/
-    Route::group(['prefix' => 'ajax', 'namespace' => 'App\Http\Controllers'], function() {
+    Route::group(['prefix' => 'ajax'], function() {
         // Changed from URL parameters to query parameters
         Route::post('get_lga', 'AjaxController@get_lga')->name('get_lga');
         Route::get('get_class_sections', 'AjaxController@get_class_sections')->name('get_class_sections');
         Route::get('get_class_subjects', 'AjaxController@get_class_subjects')->name('get_class_subjects');
-        Route::get('get-classes-by-school', 'AjaxController@getClassesBySchool')->name('get_classes_by_school');
+        Route::get('get-classes-by-school/{school_id?}', 'AjaxController@getClassesBySchool')->name('get_classes_by_school');
     });
 
     // Add the route that your JavaScript is expecting outside the ajax prefix

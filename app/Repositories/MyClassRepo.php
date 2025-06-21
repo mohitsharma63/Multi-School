@@ -63,6 +63,11 @@ class MyClassRepo
         return ClassType::find($this->find($class_id)->class_type_id);
     }
 
+    public function getClassesBySchool($schoolId)
+    {
+        return MyClass::where('school_id', $schoolId)->get();
+    }
+
     /************* Section *******************/
 
     public function createSection($data)

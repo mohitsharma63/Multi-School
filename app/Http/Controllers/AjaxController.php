@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
+use App\Models\MyClass;
 use App\Models\Lga;
 use App\Helpers\Qs;
 use App\Models\Mark;
-use App\Models\MyClass;
 use App\Repositories\LocationRepo;
 use App\Repositories\MyClassRepo;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AjaxController extends Controller
@@ -34,15 +34,26 @@ class AjaxController extends Controller
     public function getClassesBySchool(Request $req, $school_id = null)
     {
         try {
-            $id = $school_id ?: $req->school_id;
+            // Handle both URL parameter and query parameter
+            $id = $school_id ?: $req->school_id ?: $req->input('school_id');
 
             if (!$id) {
-                return response()->json(['classes' => []]);
+                return response()->json([
+                    'success' => false,
+                    'classes' => [],
+                    'message' => 'School ID is required'
+                ]);
             }
 
-            $classes = MyClass::where('school_id', $id)
-                            ->orderBy('name')
-                            ->get(['id', 'name', 'school_id']);
+            // Use the repository method instead of direct model access
+            $classes = $this->my_class->getClassesBySchool($id);
+
+            // If repository method doesn't exist, use direct model query
+            if (!$classes) {
+                $classes = \App\Models\MyClass::where('school_id', $id)
+                                ->orderBy('name')
+                                ->get(['id', 'name', 'school_id']);
+            }
 
             return response()->json([
                 'success' => true,
@@ -50,10 +61,12 @@ class AjaxController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('Error in getClassesBySchool: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching classes',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'classes' => []
             ], 500);
         }
     }
